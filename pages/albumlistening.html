@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Album Listening</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="album-minidisc">
+    <img src="media/minidisc-2012nobg.png" alt="MiniDisc" class="minidisc-image">
+    <div class="album-menu-container">
+      <button class="close-btn" onclick="window.close ? window.close() : (window.parent.document.getElementById('album').classList.add('hidden'));">&times;</button>
+      <h2 class="album-title">ALBUM LISTENING</h2>
+      <ul class="album-list">
+        <li><button onclick="playTrack('track1.mp3')">Track 1: Intro Sequence</button></li>
+        <li><button onclick="playTrack('track2.mp3')">Track 2: Glitch Dreams</button></li>
+        <li><button onclick="playTrack('track3.mp3')">Track 3: Midnight Signals</button></li>
+        <li><button onclick="playTrack('track4.mp3')">Track 4: Neon Archives</button></li>
+      </ul>
+      <audio id="album-player" class="album-player" controls hidden></audio>
+    </div>
+  </div>
+  <script>
+    function playTrack(filename) {
+      const player = document.getElementById('album-player');
+      player.src = `media/audio/${filename}`;
+      player.hidden = false;
+      player.play();
+    }
+  </script>
+</body>
+</html>

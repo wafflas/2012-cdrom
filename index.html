@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Retro Album GUI</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Intro Video Container -->
+  <div id="intro-container" class="fullscreen-video">
+    <video id="intro-video" autoplay muted>
+      <source src="media\audio\glitch background.mp4" type="video/mp4" />
+    </video>
+  </div>
+
+  <!-- Main GUI Container -->
+  <div id="main-gui" class="hidden">
+    <!-- Background Video -->
+    <div class="fullscreen-video">
+      <video id="background-video" autoplay muted loop>
+        <source src="media\audio\background.mp4" type="video/mp4" />
+      </video>
+    </div>
+
+    <!-- MiniDisc with Menu -->
+    <div class="minidisc-container">
+      <img src="media/minidisc-2012nobg.png" alt="MiniDisc" class="minidisc-image">
+      <div class="menu-container">
+        <button class="menu-item" onclick="handleMenuClick('album')">ALBUM LISTENING</button>
+        <button class="menu-item" onclick="handleMenuClick('content')">EXCLUSIVE CONTENT</button>
+        <button class="menu-item" onclick="handleMenuClick('game')">GAME</button>
+        <button class="menu-item" onclick="handleMenuClick('credits')">CREDITS</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Background Music -->
+  <audio id="bg-music" loop preload="auto">
+    <source src="media\audio\twelvee pavlou mela [music].mp3" type="audio/mp3" />
+  </audio>
+
+  <!-- Components -->
+  <div id="credits" class="popup hidden"></div>
+  <div id="album" class="popup hidden"></div>
+  <div id="game" class="popup hidden"></div>
+  <div id="archive" class="popup hidden"></div>
+
+  <audio id="glitch-audio">
+    <source src="media/audio/glitch-sounds-26212.mp3" type="audio/mp3" />
+  </audio>
+
+  <script src="script.js"></script>
+</body>
+</html>
