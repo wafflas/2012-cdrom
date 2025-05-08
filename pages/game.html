@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Album Listening</title>
+  <title>Game</title>
   <link rel="stylesheet" href="../styles.css" />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
@@ -20,17 +20,16 @@
     <source src="../media/audio/twelvee pavlou mela [music].mp3" type="audio/mp3" />
   </audio>
 
-  <!-- Content from existing albumlistening.html -->
+  <!-- Content from existing game.html -->
   <div class="minidisc-layout">
     <div class="album-content">
-      <h2 class="album-header">LISTEN</h2>
-      <ul class="track-list">
-        <li class="track-item" onclick="playTrack('track1.mp3')">TRACK 1</li>
-        <li class="track-item" onclick="playTrack('track2.mp3')">TRACK 2</li>
-        <li class="track-item" onclick="playTrack('track3.mp3')">TRACK 3</li>
-        <li class="track-item" onclick="playTrack('track4.mp3')">TRACK 4</li>
-      </ul>
-      <audio id="album-player" controls style="margin-top: 20px; width: 100%; opacity: 0.8;" hidden></audio>
+      <h2 class="album-header">GAME</h2>
+      <div style="margin-top: 40px; letter-spacing: 1px;">
+        <p style="opacity: 0.7; margin-bottom: 20px;">INSERT COIN</p>
+        <div style="display: inline-block; position: relative;">
+          <span class="interactive-text" style="position: relative; display: inline-block; font-size: 18px;">START</span>
+        </div>
+      </div>
     </div>
   </div>
   
@@ -79,17 +78,9 @@
         });
       }
       
-      // Initialize glitch text effect for tracks
+      // Initialize glitch text effect
       initGlitchTextEffect();
     });
-    
-    // For album functionality
-    function playTrack(filename) {
-      const player = document.getElementById('album-player');
-      player.src = `../media/audio/${filename}`;
-      player.hidden = false;
-      player.play();
-    }
     
     // Navigation with loading transition
     function navigateWithTransition(url) {
@@ -129,7 +120,7 @@
      * Applies a scrambled text animation when hovering over interactive elements
      */
     function initGlitchTextEffect() {
-      const interactiveElements = document.querySelectorAll('.track-item, .back-button');
+      const interactiveElements = document.querySelectorAll('.back-button, .interactive-text');
       const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
       
       interactiveElements.forEach(item => {

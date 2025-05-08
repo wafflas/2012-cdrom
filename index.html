@@ -26,12 +26,12 @@
 
     <!-- MiniDisc with Menu -->
     <div class="minidisc-container">
-      <img src="media/minidisc-2012nobg.png" alt="MiniDisc" class="minidisc-image">
+      <img src="media/minidisc-2012nobg2.png" alt="MiniDisc" class="minidisc-image">
       <div class="menu-container">
-        <button class="menu-item" onclick="handleMenuClick('album')">ALBUM LISTENING</button>
-        <button class="menu-item" onclick="handleMenuClick('content')">EXCLUSIVE CONTENT</button>
-        <button class="menu-item" onclick="handleMenuClick('game')">GAME</button>
-        <button class="menu-item" onclick="handleMenuClick('credits')">CREDITS</button>
+        <a href="javascript:void(0)" onclick="navigateWithTransition('pages/albumlistening.html')" class="menu-item">ALBUM LISTENING</a>
+        <a href="javascript:void(0)" onclick="navigateWithTransition('pages/content.html')" class="menu-item">EXCLUSIVE CONTENT</a>
+        <a href="javascript:void(0)" onclick="navigateWithTransition('pages/game.html')" class="menu-item">GAME</a>
+        <a href="javascript:void(0)" onclick="navigateWithTransition('pages/credits.html')" class="menu-item">CREDITS</a>
       </div>
     </div>
   </div>
@@ -41,16 +41,53 @@
     <source src="media\audio\twelvee pavlou mela [music].mp3" type="audio/mp3" />
   </audio>
 
-  <!-- Components -->
+  <!-- Popup Containers -->
   <div id="credits" class="popup hidden"></div>
   <div id="album" class="popup hidden"></div>
   <div id="game" class="popup hidden"></div>
-  <div id="archive" class="popup hidden"></div>
+  <div id="content" class="popup hidden"></div>
+
+  <!-- Copyright and common elements -->
+  <div class="copyright">© 2025 cd 2012</div>
+  <div class="scanlines"></div>
 
   <audio id="glitch-audio">
     <source src="media/audio/glitch-sounds-26212.mp3" type="audio/mp3" />
   </audio>
 
   <script src="script.js"></script>
+  <script>
+    // Navigation with loading transition
+    function navigateWithTransition(url) {
+      // Create loading animation
+      const loadingEl = document.createElement('div');
+      loadingEl.className = 'enigmatic-loading';
+      
+      // Create glitch container
+      const glitchContainer = document.createElement('div');
+      glitchContainer.className = 'glitch-container';
+      
+      // Add preview image with glitch effect
+      const previewImg = document.createElement('img');
+      previewImg.src = 'media/minidisc-2012nobg2.png';
+      previewImg.className = 'preview-image';
+      glitchContainer.appendChild(previewImg);
+      
+      // Add glitchy loading text
+      const loadingText = document.createElement('div');
+      loadingText.className = 'glitch-text';
+      loadingText.textContent = 'Loading...';
+      glitchContainer.appendChild(loadingText);
+      
+      // Add glitch container to loading element
+      loadingEl.appendChild(glitchContainer);
+      document.body.appendChild(loadingEl);
+      
+      // Navigate after delay
+      setTimeout(() => {
+        window.location.href = url;
+      }, 1500);
+    }
+  </script>
 </body>
 </html>
