@@ -10,9 +10,7 @@
 <body>
   <!-- Background Video - Same as index.html -->
   <div class="fullscreen-video">
-    <video id="background-video" autoplay muted loop>
-      <source src="../media/audio/background.mp4" type="video/mp4" />
-    </video>
+    <img id="background-image" src="../media/audio/background.gif" alt="Background" class="background-gif">
   </div>
   
   <!-- Background Music - Same as index.html, needed for continuity -->
@@ -24,146 +22,20 @@
   <div class="minidisc-layout">
     <div class="album-content">
       <h2 class="album-header">EXCLUSIVE</h2>
-      <div style="margin-top: 40px; letter-spacing: 1px; line-height: 1.8;">
-        <p style="opacity: 0.7;">COMING SOON</p>
-        <p style="margin-top: 30px; font-size: 10px; opacity: 0.5;">01001100 01001111 01000001 01000100 01001001 01001110 01000111</p>
+      <div class="content-info">
+        <p class="content-coming-soon">COMING SOON</p>
+        <p class="content-binary">01001100 01001111 01000001 01000100 01001001 01001110 01000111</p>
       </div>
     </div>
   </div>
   
   <!-- Back button -->
-  <a href="javascript:void(0)" onclick="navigateWithTransition('../index.html')" class="back-button">X</a>
+  <a href="javascript:void(0)" onclick="navigateWithTransition('../')" class="back-button">X</a>
   
   <!-- Common elements -->
   <div class="copyright">© 2025 cd 2012</div>
   <div class="scanlines"></div>
   
-  <!-- Page-specific script -->
-  <script>
-    // Play background video
-    document.addEventListener('DOMContentLoaded', () => {
-      const backgroundVideo = document.getElementById('background-video');
-      const bgMusic = document.getElementById('bg-music');
-      
-      backgroundVideo.play().catch(error => {
-        console.log('Background video autoplay failed:', error);
-      });
-      
-      // Handle background music continuity
-      if (bgMusic) {
-        // Check if we have a stored position to resume from
-        const musicPosition = parseFloat(sessionStorage.getItem('musicPosition'));
-        const musicWasPlaying = sessionStorage.getItem('musicPlaying') === 'true';
-        
-        if (!isNaN(musicPosition) && musicWasPlaying) {
-          bgMusic.currentTime = musicPosition;
-          bgMusic.play().catch(error => {
-            console.log('Background music autoplay failed:', error);
-          });
-        }
-        
-        // Store current time when navigating away
-        window.addEventListener('beforeunload', () => {
-          sessionStorage.setItem('musicPosition', bgMusic.currentTime);
-          sessionStorage.setItem('musicPlaying', !bgMusic.paused);
-        });
-        
-        // Keep the current time updated
-        bgMusic.addEventListener('timeupdate', () => {
-          if (!bgMusic.paused) {
-            sessionStorage.setItem('musicPosition', bgMusic.currentTime);
-          }
-        });
-      }
-      
-      // Initialize glitch text effect
-      initGlitchTextEffect();
-    });
-    
-    // Navigation with loading transition
-    function navigateWithTransition(url) {
-      // Create loading animation
-      const loadingEl = document.createElement('div');
-      loadingEl.className = 'enigmatic-loading';
-      
-      // Create glitch container
-      const glitchContainer = document.createElement('div');
-      glitchContainer.className = 'glitch-container';
-      
-      // Add preview image with glitch effect
-      const previewImg = document.createElement('img');
-      previewImg.src = '../media/minidisc-2012nobg2.png';
-      previewImg.className = 'preview-image';
-      glitchContainer.appendChild(previewImg);
-      
-      // Add glitchy loading text
-      const loadingText = document.createElement('div');
-      loadingText.className = 'glitch-text';
-      loadingText.textContent = 'Loading...';
-      glitchContainer.appendChild(loadingText);
-      
-      // Add glitch container to loading element
-      loadingEl.appendChild(glitchContainer);
-      document.body.appendChild(loadingEl);
-      
-      // Navigate after delay
-      setTimeout(() => {
-        window.location.href = url;
-      }, 1500);
-    }
-    
-    /**
-     * GlitchText Effect
-     * Converts React component to vanilla JavaScript for hover effects
-     * Applies a scrambled text animation when hovering over interactive elements
-     */
-    function initGlitchTextEffect() {
-      const interactiveElements = document.querySelectorAll('.back-button');
-      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      
-      interactiveElements.forEach(item => {
-        const originalText = item.textContent;
-        let interval = null;
-        let iterations = 0;
-        
-        // Store original text 
-        item.dataset.originalText = originalText;
-        
-        item.addEventListener('mouseenter', () => {
-          clearInterval(interval);
-          iterations = 0;
-          
-          // Start the glitch effect on hover
-          interval = setInterval(() => {
-            item.textContent = originalText.split('')
-              .map((char, index) => {
-                // Return original character if it's already been displayed
-                if (index < iterations) {
-                  return originalText[index];
-                }
-                // Return random character for remaining positions
-                return letters[Math.floor(Math.random() * 36)];
-              })
-              .join('');
-            
-            // Increase iterations faster for hover effect
-            iterations += 1/6;
-            
-            // Stop when all characters are restored
-            if (iterations >= originalText.length) {
-              clearInterval(interval);
-              item.textContent = originalText;
-            }
-          }, 25);
-        });
-        
-        item.addEventListener('mouseleave', () => {
-          // Reset immediately on leave
-          clearInterval(interval);
-          item.textContent = originalText;
-        });
-      });
-    }
-  </script>
+  <script src="../script.js"></script>
 </body>
 </html> 

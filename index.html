@@ -10,23 +10,21 @@
 <body>
   <!-- Intro Video Container -->
   <div id="intro-container" class="fullscreen-video">
-    <video id="intro-video" autoplay muted>
-      <source src="media\audio\glitch background.mp4" type="video/mp4" />
-    </video>
+    <img id="intro-image" src="media/audio/glitch background.gif" alt="Intro Glitch" class="intro-gif">
   </div>
 
   <!-- Main GUI Container -->
   <div id="main-gui" class="hidden">
     <!-- Background Video -->
     <div class="fullscreen-video">
-      <video id="background-video" autoplay muted loop>
-        <source src="media\audio\background.mp4" type="video/mp4" />
-      </video>
+      <img id="background-image" src="media/audio/background.gif" alt="Background" class="background-gif">
     </div>
 
     <!-- MiniDisc with Menu -->
-    <div class="minidisc-container">
-      <img src="media/minidisc-2012nobg2.png" alt="MiniDisc" class="minidisc-image">
+    <div class="minidisc-container" id="minidisc-container">
+      <div class="minidisc-wrapper" id="minidisc-wrapper">
+        <img src="media/minidisc-2012nobg2.png" alt="MiniDisc" class="minidisc-image">
+      </div>
       <div class="menu-container">
         <a href="javascript:void(0)" onclick="navigateWithTransition('pages/albumlistening.html')" class="menu-item">ALBUM LISTENING</a>
         <a href="javascript:void(0)" onclick="navigateWithTransition('pages/content.html')" class="menu-item">EXCLUSIVE CONTENT</a>
@@ -56,38 +54,5 @@
   </audio>
 
   <script src="script.js"></script>
-  <script>
-    // Navigation with loading transition
-    function navigateWithTransition(url) {
-      // Create loading animation
-      const loadingEl = document.createElement('div');
-      loadingEl.className = 'enigmatic-loading';
-      
-      // Create glitch container
-      const glitchContainer = document.createElement('div');
-      glitchContainer.className = 'glitch-container';
-      
-      // Add preview image with glitch effect
-      const previewImg = document.createElement('img');
-      previewImg.src = 'media/minidisc-2012nobg2.png';
-      previewImg.className = 'preview-image';
-      glitchContainer.appendChild(previewImg);
-      
-      // Add glitchy loading text
-      const loadingText = document.createElement('div');
-      loadingText.className = 'glitch-text';
-      loadingText.textContent = 'Loading...';
-      glitchContainer.appendChild(loadingText);
-      
-      // Add glitch container to loading element
-      loadingEl.appendChild(glitchContainer);
-      document.body.appendChild(loadingEl);
-      
-      // Navigate after delay
-      setTimeout(() => {
-        window.location.href = url;
-      }, 1500);
-    }
-  </script>
 </body>
 </html>
