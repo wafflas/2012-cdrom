@@ -34,9 +34,8 @@ body {
 
 .fullscreen-video video {
     width: 100%;
-    height: 100%;
+    height: 110%;
     object-fit: cover;
-    filter: brightness(0.2);
 }
 
 /* Background GIF styles */

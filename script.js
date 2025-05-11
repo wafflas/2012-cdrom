@@ -6,11 +6,10 @@
 // Wait for the DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize DOM elements
-    const introImage = document.getElementById('intro-image');
+    const introVideo = document.getElementById('intro-video');
     const introContainer = document.getElementById('intro-container');
     const mainGui = document.getElementById('main-gui');
     const bgMusic = document.getElementById('bg-music');
-    const glitchAudio = document.getElementById('glitch-audio');
     
     // Initialize glitch text for menu items
     initGlitchTextEffect();
@@ -104,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Starts the intro sequence
-     * Displays the glitchy intro GIF with sound and transitions to main GUI after the exact duration
+     * Displays the intro video and transitions to main GUI after it completes
      */
     function startIntroSequence() {
         // Check if we've already shown the intro during this session
@@ -145,26 +144,37 @@ document.addEventListener('DOMContentLoaded', () => {
         introContainer.style.opacity = '1';
         mainGui.style.opacity = '0';
 
-        // Reset and prepare audio
-        if (glitchAudio) {
-            glitchAudio.currentTime = 0;
-            glitchAudio.pause();
-            
-            // Set the glitch sound duration to match the GIF (typically 4 seconds)
-            const glitchDuration = 4000; // 4 seconds
-            
-            // Play glitch sound
-            glitchAudio.play().catch(error => {
-                console.log('Glitch audio autoplay failed:', error);
+        // Reset and play the intro video
+        if (introVideo) {
+            introVideo.currentTime = 0;
+            introVideo.play().catch(error => {
+                console.log('Intro video autoplay failed:', error);
+                // Fallback if autoplay fails
+                setTimeout(() => {
+                    transitionToMain();
+                }, 4000);
             });
             
-            // Set timeout to precisely match audio duration
-            introTimeout = setTimeout(() => {
-                transitionToMain();
-            }, glitchDuration);
+            // Start transition before video fully ends for a smoother experience
+            // Listen for timeupdate events to know when video is near the end
+            introVideo.addEventListener('timeupdate', function() {
+                // If video is within last 0.5 seconds, start transition
+                if (introVideo.duration > 0 && introVideo.currentTime >= (introVideo.duration - 0.5) && !introVideo.transitionStarted) {
+                    introVideo.transitionStarted = true; // Flag to prevent multiple transitions
+                    transitionToMain();
+                }
+            });
+            
+            // Backup in case timeupdate doesn't fire properly
+            introVideo.onended = function() {
+                if (!introVideo.transitionStarted) {
+                    introVideo.transitionStarted = true;
+                    transitionToMain();
+                }
+            };
         } else {
-            // Fallback if glitch audio isn't available
-            introTimeout = setTimeout(() => {
+            // Fallback if video isn't available
+            setTimeout(() => {
                 transitionToMain();
             }, 4000);
         }
@@ -181,126 +191,54 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Handles transition from intro screen to main GUI
-     * Creates a mysterious, glitchy transition effect
+     * Creates a simple fade transition effect
      */
     function transitionToMain() {
-        // Stop glitch audio
-        if (glitchAudio) {
-            // Fade out glitch audio for smoother transition
-            const fadeInterval = setInterval(() => {
-                if (glitchAudio.volume > 0.1) {
-                    glitchAudio.volume -= 0.1;
-                } else {
-                    glitchAudio.pause();
-                    glitchAudio.volume = 1.0; // Reset volume for next time
-                    clearInterval(fadeInterval);
-                }
-            }, 100);
-        }
-
-        // Create a glitchy transition effect
-        const glitchOverlay = document.createElement('div');
-        glitchOverlay.style.position = 'fixed';
-        glitchOverlay.style.top = '0';
-        glitchOverlay.style.left = '0';
-        glitchOverlay.style.width = '100vw';
-        glitchOverlay.style.height = '100vh';
-        glitchOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-        glitchOverlay.style.zIndex = '9000';
-        glitchOverlay.style.opacity = '0';
-        glitchOverlay.style.transition = 'opacity 0.5s ease';
-        document.body.appendChild(glitchOverlay);
-
-        // Pulse effect for mysterious transition
+        // Continue playing the video while fading out the container
+        introContainer.style.opacity = '0';
+        introContainer.style.transition = 'opacity 0.5s ease';
+        
+        // Prepare main GUI behind the fading intro
+        mainGui.classList.remove('hidden');
+        mainGui.style.opacity = '0';
+        
+        // Begin fade-in of main GUI while intro is still fading out
+        // This creates an overlapping transition
         setTimeout(() => {
-            glitchOverlay.style.opacity = '1';
+            mainGui.style.transition = 'opacity 2.5s ease';
+            mainGui.style.opacity = '1';
             
-            // Add some random scan lines for TV effect
-            const scanLines = document.createElement('div');
-            scanLines.style.position = 'fixed';
-            scanLines.style.top = '0';
-            scanLines.style.left = '0';
-            scanLines.style.width = '100vw';
-            scanLines.style.height = '100vh';
-            scanLines.style.background = 'linear-gradient(to bottom, transparent 50%, rgba(0, 230, 255, 0.15) 51%)';
-            scanLines.style.backgroundSize = '100% 4px';
-            scanLines.style.zIndex = '9001';
-            scanLines.style.opacity = '0';
-            scanLines.style.animation = 'fadeInOut 2s';
-            document.body.appendChild(scanLines);
-            
-            // Create a style element for the animation
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes fadeInOut {
-                    0% { opacity: 0; }
-                    25% { opacity: 0.8; }
-                    75% { opacity: 0.3; }
-                    100% { opacity: 0; }
-                }
-                @keyframes glitchShift {
-                    0% { transform: translate(0); }
-                    20% { transform: translate(-10px, 5px); }
-                    40% { transform: translate(10px, -5px); }
-                    60% { transform: translate(-5px, -5px); }
-                    80% { transform: translate(5px, 5px); }
-                    100% { transform: translate(0); }
-                }
-            `;
-            document.head.appendChild(style);
-            
-            // Create quick glitch effect
-            introContainer.style.animation = 'glitchShift 0.5s';
-            
-            setTimeout(() => {
-                // Fade out intro
-                introContainer.style.opacity = '0';
-                introContainer.style.transition = 'opacity 1.5s cubic-bezier(0.23, 1, 0.32, 1)';
+            // Start background music with the transition
+            if (bgMusic && bgMusic.paused) {
+                // Fade in music volume for smooth audio transition
+                bgMusic.volume = 0;
+                bgMusic.currentTime = 0;
+                bgMusic.play().catch(error => {
+                    console.log('Background music autoplay failed:', error);
+                });
                 
-                setTimeout(() => {
-                    // Hide intro container
-                    introContainer.classList.add('hidden');
-                    
-                    // Show main GUI with fade in
-                    mainGui.classList.remove('hidden');
-                    mainGui.style.opacity = '0';
-                    
-                    // Create a better fade effect
-                    setTimeout(() => {
-                        // Remove glitch overlay with fade
-                        glitchOverlay.style.opacity = '0';
-                        
-                        // Fade in main GUI with smoother cubic bezier
-                        mainGui.style.transition = 'opacity 2s cubic-bezier(0.19, 1, 0.22, 1)';
-                        mainGui.style.opacity = '1';
-                        
-                        // Start background music only now, from the beginning
-                        if (bgMusic && bgMusic.paused) {
-                            // Set flag to indicate the next navigation will be the first one after intro
-                            // This helps us ensure music continues properly on first navigation
-                            sessionStorage.setItem('firstNavigation', 'true');
-                            
-                            console.log('Starting music from beginning after intro');
-                            
-                            // Always start from beginning after intro
-                            bgMusic.currentTime = 0;
-                            
-                            bgMusic.play().catch(error => {
-                                console.log('Background music autoplay failed:', error);
-                            });
-                            sessionStorage.setItem('musicPlaying', 'true');
-                        }
-                        
-                        // Clean up after transition completes
-                        setTimeout(() => {
-                            document.body.removeChild(glitchOverlay);
-                            document.body.removeChild(scanLines);
-                            document.head.removeChild(style);
-                        }, 2000);
-                    }, 500);
-                }, 1000);
-            }, 500);
-        }, 200);
+                // Gradually increase volume
+                let vol = 0;
+                const volumeInterval = setInterval(() => {
+                    vol += 0.05;
+                    if (vol >= 1) {
+                        clearInterval(volumeInterval);
+                        bgMusic.volume = 1;
+                    } else {
+                        bgMusic.volume = vol;
+                    }
+                }, 100);
+                
+                // Set flag for first navigation
+                sessionStorage.setItem('firstNavigation', 'true');
+                sessionStorage.setItem('musicPlaying', 'true');
+            }
+        }, 500);
+        
+        // Hide intro container after transition completes
+        setTimeout(() => {
+            introContainer.classList.add('hidden');
+        }, 2000);
     }
 
     /**
