@@ -102,6 +102,59 @@ document.addEventListener('DOMContentLoaded', () => {
     setupContinuousMusic();
 
     /**
+     * Ensures intro video plays across all browsers
+     * Using multiple techniques to maximize autoplay compatibility
+     */
+    function ensureVideoPlayback(videoElement) {
+        if (!videoElement) return;
+
+        // Function to attempt playing the video
+        const attemptPlay = () => {
+            videoElement.play().then(() => {
+                console.log('Video playback started successfully');
+            }).catch(err => {
+                console.log('Video autoplay failed:', err);
+                
+                // If video is muted but still won't play, use the fallback
+                if (videoElement.muted) {
+                    console.log('Even muted autoplay failed, using fallback');
+                    setTimeout(() => {
+                        transitionToMain();
+                    }, 2000);
+                } else {
+                    // Try again with muted if it's not already muted
+                    console.log('Retrying with muted video');
+                    videoElement.muted = true;
+                    videoElement.play().catch(e => {
+                        console.log('Muted autoplay still failed:', e);
+                        setTimeout(() => {
+                            transitionToMain();
+                        }, 2000);
+                    });
+                }
+            });
+        };
+
+        // Try playing immediately
+        attemptPlay();
+
+        // Backup: also try playing on user interaction
+        const userInteractionEvents = ['click', 'touchstart', 'keydown'];
+        const playOnUserInteraction = () => {
+            attemptPlay();
+            // Remove event listeners after first interaction
+            userInteractionEvents.forEach(event => {
+                document.removeEventListener(event, playOnUserInteraction);
+            });
+        };
+
+        // Add event listeners for user interaction
+        userInteractionEvents.forEach(event => {
+            document.addEventListener(event, playOnUserInteraction, { once: true });
+        });
+    }
+
+    /**
      * Starts the intro sequence
      * Displays the intro video and transitions to main GUI after it completes
      */
@@ -147,13 +200,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Reset and play the intro video
         if (introVideo) {
             introVideo.currentTime = 0;
-            introVideo.play().catch(error => {
-                console.log('Intro video autoplay failed:', error);
-                // Fallback if autoplay fails
-                setTimeout(() => {
-                    transitionToMain();
-                }, 4000);
-            });
+            
+            // Enhanced video autoplay across browsers
+            ensureVideoPlayback(introVideo);
             
             // Start transition before video fully ends for a smoother experience
             // Listen for timeupdate events to know when video is near the end
@@ -172,11 +221,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     transitionToMain();
                 }
             };
+            
+            // Extra failsafe in case video stalls or doesn't play
+            setTimeout(() => {
+                if (!introVideo.transitionStarted && (introVideo.paused || introVideo.currentTime === 0)) {
+                    console.log('Video playback check failsafe triggered');
+                    introVideo.transitionStarted = true;
+                    transitionToMain();
+                }
+            }, 4000);
         } else {
             // Fallback if video isn't available
             setTimeout(() => {
                 transitionToMain();
-            }, 4000);
+            }, 2000);
         }
         
         // Make sure background music is paused during intro
