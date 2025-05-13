@@ -108,50 +108,48 @@ document.addEventListener('DOMContentLoaded', () => {
     function ensureVideoPlayback(videoElement) {
         if (!videoElement) return;
 
-        // Function to attempt playing the video
+        // Function to attempt playing the video with sound
         const attemptPlay = () => {
+            // Start unmuted for sound
+            videoElement.muted = false;
+            
             videoElement.play().then(() => {
-                console.log('Video playback started successfully');
+                console.log('Video playback started successfully with sound');
             }).catch(err => {
-                console.log('Video autoplay failed:', err);
+                console.log('Video autoplay with sound failed, trying muted:', err);
                 
-                // If video is muted but still won't play, use the fallback
-                if (videoElement.muted) {
-                    console.log('Even muted autoplay failed, using fallback');
+                // If unmuted playback fails, try muted first (browsers often require this)
+                videoElement.muted = true;
+                videoElement.play().then(() => {
+                    console.log('Muted video playback started, unmuting after user interaction');
+                    
+                    // Set up one-time event listeners to unmute after first interaction
+                    const unmute = () => {
+                        videoElement.muted = false;
+                        console.log('Video unmuted after user interaction');
+                        
+                        // Remove all event listeners
+                        userInteractionEvents.forEach(event => {
+                            document.removeEventListener(event, unmute);
+                        });
+                    };
+                    
+                    // Listen for user interaction to unmute
+                    const userInteractionEvents = ['click', 'touchstart', 'keydown'];
+                    userInteractionEvents.forEach(event => {
+                        document.addEventListener(event, unmute, { once: true });
+                    });
+                }).catch(e => {
+                    console.log('Both autoplay attempts failed:', e);
                     setTimeout(() => {
                         transitionToMain();
                     }, 2000);
-                } else {
-                    // Try again with muted if it's not already muted
-                    console.log('Retrying with muted video');
-                    videoElement.muted = true;
-                    videoElement.play().catch(e => {
-                        console.log('Muted autoplay still failed:', e);
-                        setTimeout(() => {
-                            transitionToMain();
-                        }, 2000);
-                    });
-                }
+                });
             });
         };
 
         // Try playing immediately
         attemptPlay();
-
-        // Backup: also try playing on user interaction
-        const userInteractionEvents = ['click', 'touchstart', 'keydown'];
-        const playOnUserInteraction = () => {
-            attemptPlay();
-            // Remove event listeners after first interaction
-            userInteractionEvents.forEach(event => {
-                document.removeEventListener(event, playOnUserInteraction);
-            });
-        };
-
-        // Add event listeners for user interaction
-        userInteractionEvents.forEach(event => {
-            document.addEventListener(event, playOnUserInteraction, { once: true });
-        });
     }
 
     /**
@@ -172,6 +170,12 @@ document.addEventListener('DOMContentLoaded', () => {
             sessionStorage.removeItem('firstNavigation');
             
             console.log('Skipping intro, resuming from stored state');
+            
+            // Ensure intro video is stopped if it exists
+            if (introVideo) {
+                introVideo.pause();
+                introVideo.currentTime = 0;
+            }
             
             // Start background music (if it was playing before)
             const musicWasPlaying = sessionStorage.getItem('musicPlaying') === 'true';
@@ -199,9 +203,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Reset and play the intro video
         if (introVideo) {
+            // Reset video to beginning
             introVideo.currentTime = 0;
             
-            // Enhanced video autoplay across browsers
+            // Try to play with sound
             ensureVideoPlayback(introVideo);
             
             // Start transition before video fully ends for a smoother experience
@@ -296,6 +301,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Hide intro container after transition completes
         setTimeout(() => {
             introContainer.classList.add('hidden');
+            // Stop video playback completely once it's hidden
+            if (introVideo) {
+                introVideo.pause();
+                introVideo.currentTime = 0;
+            }
         }, 2000);
     }
 
