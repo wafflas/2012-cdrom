@@ -3,7 +3,12 @@
  * Handles intro sequence, navigation, modal views, and audio playback
  */
 
-// Wait for the DOM to be fully loaded
+
+
+
+// ==============================================
+// INITIALIZATION AND DOM READY HANDLER
+// ==============================================
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize DOM elements
     const introVideo = document.getElementById('intro-video');
@@ -98,13 +103,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+
+
+
+    
     // Set up music continuity
     setupContinuousMusic();
 
-    /**
-     * Ensures intro video plays across all browsers
-     * Using multiple techniques to maximize autoplay compatibility
-     */
+  // ==============================================
+// MUSIC CONTINUITY MANAGEMENT
+// ==============================================
     function ensureVideoPlayback(videoElement) {
         if (!videoElement) return;
 
@@ -152,10 +160,13 @@ document.addEventListener('DOMContentLoaded', () => {
         attemptPlay();
     }
 
-    /**
-     * Starts the intro sequence
-     * Displays the intro video and transitions to main GUI after it completes
-     */
+   
+
+
+// ==============================================
+// INTRO SEQUENCE HANDLING
+// ==============================================
+
     function startIntroSequence() {
         // Check if we've already shown the intro during this session
         const hasSeenIntro = sessionStorage.getItem('hasSeenIntro');
@@ -326,6 +337,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(scanlines);
 });
 
+
+
+
+
+
+// ==============================================
+// NAVIGATION AND TRANSITIONS
+// ==============================================
 /**
  * Navigation with loading transition
  * Creates a glitchy loading screen with 3D spinning animation when navigating between pages
@@ -402,28 +421,13 @@ function navigateWithTransition(url) {
     }, 2500);
 }
 
-/**
- * Album Player Functions
- * Handles track playback in the album listening section
- */
 
-/**
- * Plays a track in the album player
- * @param {string} filename - The audio filename to play
- */
-function playTrack(filename) {
-    const player = document.getElementById('album-player');
-    const basePath = window.location.pathname.includes('pages') ? '../media/audio/' : 'media/audio/';
-    player.src = `${basePath}${filename}`;
-    player.hidden = false;
-    player.play();
-}
 
-/**
- * GlitchText Effect
- * Applies a scrambled text animation when hovering over interactive elements
- * Applied to all clickable elements across the project
- */
+// ==============================================
+// GLITCH TEXT EFFECT
+// ==============================================
+
+
 function initGlitchTextEffect() {
     // Target all clickable elements across the site
     const interactiveElements = document.querySelectorAll(
@@ -627,11 +631,13 @@ function initGlitchTextEffect() {
     });
 }
 
-/**
- * 3D Hover Effect for MiniDisc
- * Creates a 3D rotation effect when hovering over the MiniDisc
- * Menu follows the rotation to create a cohesive 3D experience
- */
+
+
+
+// ==============================================
+// 3D HOVER EFFECTS
+// ==============================================
+
 function init3DHoverEffect() {
     const container = document.getElementById('minidisc-container');
     const wrapper = document.getElementById('minidisc-wrapper');
@@ -764,10 +770,13 @@ function init3DHoverEffect() {
     });
 }
 
-/**
- * Maps section names to their preview images
- * Used in loading screens to show a glitchy preview of the destination
- */
+
+
+// ==============================================
+// MODAL AND CONTENT HANDLING
+// ==============================================
+
+
 const sectionPreviews = {
     'album': 'media/minidisc-2012nobg2.png',
     'content': 'media/minidisc-2012nobg2.png',
@@ -866,7 +875,7 @@ function loadContent(action, loadingEl) {
         'credits': 'credits.html'
     };
 
-    // Add a delay to create suspense (AWGE-style)
+
     setTimeout(() => {
         fetch(`pages/${pageMap[action]}`)
             .then(response => response.text())
@@ -971,14 +980,109 @@ function closeModal(modalId) {
     }, 500);
 }
 
-/**
- * Event listener for keyboard escape key
- * Allows closing the active modal by pressing ESC
- * Improves accessibility and usability
- */
+
+// ==============================================
+// EVENT LISTENERS
+// ==============================================
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && currentActive) {
         // Find active modal and close it
         closeModal(currentActive);
+    }
+});
+
+
+
+
+
+// ==============================================
+ // PHOTO COLLAGE   
+// ==============================================
+
+
+  // Photo collage interaction
+  document.addEventListener('DOMContentLoaded', function() {
+    const photos = document.querySelectorAll('.content-photo');
+    const fullscreenViewer = document.getElementById('content-fullscreen-viewer');
+    const fullscreenImage = document.getElementById('content-fullscreen-image');
+    const closeButton = document.querySelector('.content-fullscreen-close');
+    
+    // Click event for photos
+    photos.forEach(photo => {
+      photo.addEventListener('click', function() {
+        const imgSrc = this.querySelector('img').src;
+        // Change the URL to get a higher resolution version
+        const hiResImgSrc = imgSrc.replace(/\/\d+\/\d+/, '/800/600');
+        fullscreenImage.src = hiResImgSrc;
+        fullscreenViewer.classList.add('content-active');
+      });
+    });
+    
+    // Close fullscreen viewer
+    closeButton.addEventListener('click', function() {
+      fullscreenViewer.classList.remove('content-active');
+    });
+    
+    // Also close on escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && fullscreenViewer.classList.contains('content-active')) {
+        fullscreenViewer.classList.remove('content-active');
+      }
+    });
+    
+    // Add glitch effect randomly to photos
+    setInterval(() => {
+      const randomPhoto = photos[Math.floor(Math.random() * photos.length)];
+      randomPhoto.classList.add('content-glitch');
+      
+      setTimeout(() => {
+        randomPhoto.classList.remove('content-glitch');
+      }, 200);
+    }, 5000);
+  });
+
+
+
+// ==============================================
+ // TREMBLING SOUND EFFECT
+// ==============================================
+document.addEventListener('DOMContentLoaded', function() {
+    const photos = document.querySelectorAll('.content-photo');
+    
+    photos.forEach(photo => {
+        photo.addEventListener('mouseenter', function() {
+            playRandomTremblingSound();
+        });
+    });
+    
+    function playRandomTremblingSound() {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        // Random frequency between 100 and 300 Hz
+        const baseFreq = Math.random() * 1000 + 100;
+        oscillator.type = 'triangle';
+        oscillator.frequency.setValueAtTime(baseFreq, audioCtx.currentTime);
+        
+        // Random trembling effect
+        oscillator.frequency.linearRampToValueAtTime(
+            baseFreq + Math.random() * 30, 
+            audioCtx.currentTime + 0.1
+        );
+        
+        // Set volume
+        gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        
+        // Connect nodes
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        // Play and stop
+        oscillator.start();
+        setTimeout(() => {
+            oscillator.stop();
+        }, 100);
     }
 });

@@ -106,20 +106,56 @@ body {
     color: aquamarine;
 }
 
-/* Minidisc layout - Common to all content pages */
 .minidisc-layout {
     position: absolute;
     width: min(600px, 80vw);
     height: min(600px, 80vw);
-    border: 1px solid #000000;
     transform: rotate(-0.23deg);
     z-index: 5;
-    clip-path: polygon(0.138% 95.623%,0.213% 97.634%,0.777% 98.581%,1.453% 99.172%,2.847% 99.589%,98.196% 99.763%,98.421% 99.763%,98.534% 99.763%,98.872% 99.645%,99.098% 99.408%,99.211% 99.172%,99.323% 98.935%,99.323% 98.699%,99.323% 98.58%,99.675% 3.956%,99.662% 3.602%,99.437% 3.01%,99.098% 2.419%,99.098% 2.419%,99.088% 2.405%,99.06% 2.367%,99.016% 2.307%,98.958% 2.23%,98.887% 2.138%,98.806% 2.036%,98.717% 1.926%,98.622% 1.813%,98.523% 1.7%,98.422% 1.591%,97.858% 0.999%,97.52% 0.763%,97.181% 0.526%,95.941% 0.29%,8.444% 0.437%,7.544% 0.796%,5.068% 2.108%,2.709% 4.247%,1.566% 5.731%,0.804% 7.448%,0.245% 8.633%,0.138% 10.171%,0.138% 95.623%);
+    clip-path: polygon(0.138% 95.623%, 0.213% 97.634%, 0.777% 98.581%, 1.453% 99.172%, 2.847% 99.589%, 98.196% 99.763%, 98.421% 99.763%, 98.534% 99.763%, 98.872% 99.645%, 99.098% 99.408%, 99.211% 99.172%, 99.323% 98.935%, 99.323% 98.699%, 99.323% 98.58%, 99.675% 3.956%, 99.662% 3.602%, 99.437% 3.01%, 99.098% 2.419%, 99.088% 2.405%, 99.06% 2.367%, 99.016% 2.307%, 98.958% 2.23%, 98.887% 2.138%, 98.806% 2.036%, 98.717% 1.926%, 98.622% 1.813%, 98.523% 1.7%, 98.422% 1.591%, 97.858% 0.999%, 97.52% 0.763%, 97.181% 0.526%, 95.941% 0.29%, 8.444% 0.437%, 7.544% 0.796%, 5.068% 2.108%, 2.709% 4.247%, 1.566% 5.731%, 0.804% 7.448%, 0.245% 8.633%, 0.138% 10.171%, 0.138% 95.623%);
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: rgb(53, 73, 82);
-}
+    background: linear-gradient(145deg, #0b0f1a, #1b2735);
+    border: 1px solid #00ffe0;
+    box-shadow:
+      0 0 8px #00ffe0aa,
+      0 0 25px #00ffe033 inset,
+      0 0 3px #00ffe0;
+    color: #c0fefe;
+    font-family: 'VT323', monospace;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    text-shadow: 0 0 2px #00ffe0aa;
+    backdrop-filter: blur(3px) brightness(1.05);
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .minidisc-layout::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0, 255, 224, 0.02),
+      rgba(0, 255, 224, 0.02) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+    pointer-events: none;
+    mix-blend-mode: overlay;
+    z-index: 1;
+    animation: flicker 2s infinite;
+  }
+  
+  @keyframes flicker {
+    0%, 100% { opacity: 0.9; }
+    45% { opacity: 0.6; }
+    60% { opacity: 0.7; }
+    75% { opacity: 0.8; }
+  }
+  
 
 body > .minidisc-layout {
     position: fixed;
@@ -129,14 +165,14 @@ body > .minidisc-layout {
     z-index: 5;
 }
 
-.album-content {
+.global-content {
     color: white;
     text-align: center;
     padding: 20px;
     font-family: 'Press Start 2P', monospace;
 }
 
-.album-header {
+.global-header {
     letter-spacing: 2px;
     margin-bottom: 20px;
 }
@@ -583,31 +619,182 @@ body:has(.popup.modal-active) .fullscreen-video video {
    =============================================================== */
 
 /* Content page specific styles */
-.content-info {
-    margin-top: 40px;
-    letter-spacing: 1px;
-    line-height: 1.8;
+
+
+@keyframes content-noise {
+    0%, 100% { background-position: 0 0; }
+    50% { background-position: 100% 100%; }
 }
 
-.content-coming-soon {
-    opacity: 0.7;
+.content-collage {
+    position: relative;
+    width: 100%;
+    height: 380px;  /* Increase height to accommodate spacing */
+  padding: 10px;  /* Add padding to the container */
+    margin-top: 20px;
+    /* Add padding to create more space around the edges */
 }
 
-.content-binary {
-    margin-top: 30px;
-    font-size: 10px;
-    opacity: 0.5;
+.content-photo {
+    position: absolute;
+    box-shadow: 2px 2px 15px rgba(0, 0, 0, 0.5);
+    padding: 0;
+    width: 200px;
+    height: 150px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    transition: all 0.3s ease;
+      /* Increase box-shadow spread to create visual space */
+  box-shadow: 5px 5px 20px rgba(0, 0, 0, 0.7);
+  /* Add margin to create physical space between elements */
+  margin: 90px;    
+  filter:opacity(0.4);
 }
 
+
+.content-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+    filter: sepia(0.2) contrast(1.1);
+}
+
+.content-photo:hover {
+    z-index: 100 !important;
+    filter: opacity(1);
+    animation: shake 0.5s;
+    animation-iteration-count: infinite;
+}
+
+
+
+@media (hover: hover) {
+    .content-photo:hover::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 0;
+        height: 0;
+        background: transparent;
+        animation: play-sound 0.1s forwards;
+    }
+}
+
+@keyframes play-sound {
+    to {
+        width: 0;
+        height: 0;
+    }
+}
+
+@keyframes shake {
+    0% { transform: translate(1px, 1px) rotate(0deg); }
+    10% { transform: translate(-1px, -2px) rotate(-1deg); }
+    20% { transform: translate(-3px, 0px) rotate(1deg); }
+    30% { transform: translate(3px, 2px) rotate(0deg); }
+    40% { transform: translate(1px, -1px) rotate(1deg); }
+    50% { transform: translate(-1px, 2px) rotate(-1deg); }
+    60% { transform: translate(-3px, 1px) rotate(0deg); }
+    70% { transform: translate(3px, 1px) rotate(-1deg); }
+    80% { transform: translate(-1px, -1px) rotate(1deg); }
+    90% { transform: translate(1px, 2px) rotate(0deg); }
+    100% { transform: translate(1px, -2px) rotate(-1deg); }
+  }
+
+/* For the fullscreen viewer, use the same clip path as the minidisc layout */
+.content-fullscreen-viewer {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90vw;
+    height: 90vh;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    clip-path: polygon(0.138% 95.623%,0.213% 97.634%,0.777% 98.581%,1.453% 99.172%,2.847% 99.589%,98.196% 99.763%,98.421% 99.763%,98.534% 99.763%,98.872% 99.645%,99.098% 99.408%,99.211% 99.172%,99.323% 98.935%,99.323% 98.699%,99.323% 98.58%,99.675% 3.956%,99.662% 3.602%,99.437% 3.01%,99.098% 2.419%,99.098% 2.419%,99.088% 2.405%,99.06% 2.367%,99.016% 2.307%,98.958% 2.23%,98.887% 2.138%,98.806% 2.036%,98.717% 1.926%,98.622% 1.813%,98.523% 1.7%,98.422% 1.591%,97.858% 0.999%,97.52% 0.763%,97.181% 0.526%,95.941% 0.29%,8.444% 0.437%,7.544% 0.796%,5.068% 2.108%,2.709% 4.247%,1.566% 5.731%,0.804% 7.448%,0.245% 8.633%,0.138% 10.171%,0.138% 95.623%);
+  }
+  
+  /* Show the viewer when active */
+  .content-fullscreen-viewer.content-active {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  /* Style the fullscreen image to fill the clipped area */
+  #content-fullscreen-image {
+    max-width: 95%;
+    max-height: 95%;
+    object-fit: contain;
+    transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    transform: scale(0.9);
+  }
+  
+  .content-active #content-fullscreen-image {
+    transform: scale(1);
+  }
+  
+
+  .content-fullscreen-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: #ffffff;
+    font-size: 28px;
+    cursor: pointer;
+    z-index: 2001;
+    font-family: 'Press Start 2P', monospace;
+    text-shadow: 0 0 10px #ff0000, 0 0 15px rgba(255, 255, 255, 0.8);
+    background-color: rgba(0, 0, 0, 0.6);
+    padding: 10px 15px;
+
+}
+
+.content-fullscreen-close:hover {
+    color: aquamarine;
+    transform: scale(1.1);
+}
+
+#content-fullscreen-image {
+    max-width: 80%;
+    max-height: 80%;
+    object-fit: contain;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+    transform: scale(0.9);
+    transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.content-active #content-fullscreen-image {
+    transform: scale(1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .content-photo {
+        width: 150px;
+        height: 110px;
+    }
+}
 
 /* ===============================================================
+  
 
-   ____                     _   _   _         
+     ____                     _   _   _         
   / ___|  _ __    ___    __| | (_) | |_   ___ 
  | |     | '__|  / _ \  / _` | | | | __| / __|
  | |___  | |    |  __/ | (_| | | | | |_  \__ \
   \____| |_|     \___|  \__,_| |_|  \__| |___/
                                               
+
 
    =============================================================== */
 
@@ -622,21 +809,12 @@ body:has(.popup.modal-active) .fullscreen-video video {
     overflow: hidden;
 }
 
-/* Terminal flash effect */
-.terminal-flash {
-    animation: terminal-flash 0.15s;
-}
-    
-@keyframes terminal-flash {
-    0%, 100% { background-color: #001428; }
-    50% { background-color: #003856; }
-}
+
 
 /* Terminal header */
 .terminal-header {
     display: flex;
     justify-content: space-between;
-    border-bottom: 1px solid #00e6ff;
     padding-bottom: 15px;
     margin-bottom: 15px;
     align-items: center;
@@ -676,44 +854,6 @@ body:has(.popup.modal-active) .fullscreen-video video {
     50% { opacity: 0.3; }
 }
 
-/* Terminal content layout */
-.terminal-content {
-    display: flex;
-    height: 250px;
-    margin-bottom: 15px;
-}
-
-.terminal-main {
-    flex: 2;
-    margin-right: 15px;
-}
-
-.terminal-sidebar {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Profile section with pixelated image */
-.profile-section {
-    border: 1px solid #00e6ff;
-    height: 150px;
-    margin-bottom: 15px;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-}
-
-.profile-image {
-    height: 120px;
-    background-image: url('../media/minidisc-2012nobg2.png');
-    background-size: 70%;
-    background-position: center;
-    background-repeat: no-repeat;
-    position: relative;
-    filter: brightness(0.9) contrast(1.2) grayscale(0.2);
-    image-rendering: pixelated;
-}
 
 /* Scan lines effect */
 .scan-lines-overlay {
@@ -733,23 +873,7 @@ body:has(.popup.modal-active) .fullscreen-video video {
     z-index: 3;
 }
 
-.scan-lines-effect {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: repeating-linear-gradient(
-        0deg,
-        rgba(0, 230, 255, 0.1),
-        rgba(0, 230, 255, 0.1) 1px,
-        transparent 1px,
-        transparent 2px
-    );
-    pointer-events: none;
-    z-index: 2;
-    animation: scanlines 3s linear infinite;
-}
+
 
 /* CRT effect for terminal */
 .crt-effect {
@@ -768,110 +892,7 @@ body:has(.popup.modal-active) .fullscreen-video video {
     z-index: 2;
 }
 
-/* Scroll hint for terminal */
-.terminal-scroll-hint {
-    position: absolute;
-    bottom: 5px;
-    right: 10px;
-    font-size: 10px;
-    color: rgba(0, 230, 255, 0.5);
-    animation: pulse-hint 2s infinite;
-    pointer-events: none;
-    user-select: none;
-}
 
-@keyframes pulse-hint {
-    0%, 100% { opacity: 0.5; }
-    50% { opacity: 1; }
-}
-
-@keyframes scanlines {
-    0% {
-        background-position: 0 0;
-    }
-    100% {
-        background-position: 0 30px;
-    }
-}
-
-.profile-stats {
-    height: 30px;
-    padding: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.stat-bar {
-    height: 15px;
-    width: 80%;
-    background: #001428;
-    border: 1px solid #00e6ff;
-    position: relative;
-    overflow: hidden;
-}
-
-.stat-bar::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 60%;
-    background-color: #00e6ff;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% {
-        opacity: 0.6;
-    }
-    50% {
-        opacity: 1;
-    }
-}
-
-/* Terminal menu buttons */
-.terminal-menu {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.menu-button, .sidebar-button {
-    border: 1px solid #00e6ff;
-    padding: 8px;
-    text-align: center;
-    font-family: 'VT323', monospace;
-    font-size: 18px;
-    position: relative;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.menu-button:hover, .sidebar-button:hover {
-    background-color: rgba(0, 230, 255, 0.2);
-    box-shadow: 0 0 10px rgba(0, 230, 255, 0.5);
-}
-
-.sidebar-button {
-    font-size: 16px;
-    margin-bottom: 10px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.sidebar-spacer {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-left: 1px solid #00e6ff;
-    opacity: 0.5;
-    margin: 10px 0;
-}
 
 /* Terminal output area (scrolling text) - Enhanced for smooth scrolling */
 .terminal-output {
@@ -1113,6 +1134,8 @@ canvas {
 .game-insert-coin {
     opacity: 0.7;
     margin-bottom: 20px;
+    color: gold;
+    animation: startButtonGlitch 0.3s infinite alternate;
 }
 
 .game-start-container {
