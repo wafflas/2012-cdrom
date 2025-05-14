@@ -7,6 +7,128 @@
   <link rel="stylesheet" href="../styles.css" />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Emulogic&display=swap" rel="stylesheet">
+  <style>
+    /* Add local styles to hide game section initially */
+    .game-section {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      width: 100%;
+    }
+    
+    .game-container {
+      display: none;
+      position: relative;
+      width: 420px;
+      height: 500px;
+      margin: 0 auto;
+      box-shadow: 0 0 30px rgba(0, 229, 255, 0.5);
+      border-radius: 5px;
+      background-color: #000;
+      overflow: visible;
+      border: none;
+    }
+    
+    canvas {
+      display: block;
+      border: none;
+      outline: none;
+      background-color: #000;
+    }
+    
+    .cyberpunk-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 24px;
+      color: #00e5ff;
+      text-shadow: 0 0 10px #00e5ff, 0 0 20px #00e5ff;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      margin-bottom: 20px;
+    }
+    
+    .game-controls {
+      position: absolute;
+      bottom: 10px;
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+      padding: 5px 0;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 12px;
+      color: #ff00e5;
+    }
+    
+    .control-key {
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid #00e5ff;
+      box-shadow: 0 0 5px #00e5ff;
+      padding: 5px 10px;
+      border-radius: 3px;
+    }
+    
+    .game-controls-label {
+      margin-top: 5px;
+      color: #fff;
+      font-size: 10px;
+      text-align: center;
+    }
+    
+    #game-menu {
+      position: relative;
+    }
+    
+    .game-version {
+      position: absolute;
+      top: -20px;
+      right: 10px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      color: #ff00e5;
+    }
+    
+    /* Glitch animation for title */
+    @keyframes glitchAnimation {
+      0% {
+        text-shadow: 0.05em 0 0 #00fffc, -0.05em -0.025em 0 #fc00ff;
+        transform: translate(0);
+      }
+      25% {
+        text-shadow: -0.05em -0.025em 0 #00fffc, 0.025em 0.025em 0 #fc00ff;
+        transform: translate(-0.1em, 0.1em);
+      }
+      50% {
+        text-shadow: 0.025em 0.05em 0 #00fffc, 0 -0.05em 0 #fc00ff;
+        transform: translate(0);
+      }
+      75% {
+        text-shadow: -0.025em -0.025em 0 #00fffc, -0.025em -0.05em 0 #fc00ff;
+        transform: translate(0.1em, 0);
+      }
+      100% {
+        text-shadow: -0.025em 0 0 #00fffc, 0.025em -0.025em 0 #fc00ff;
+        transform: translate(0);
+      }
+    }
+    
+    .cyberpunk-title span {
+      display: inline-block;
+      animation: glitchAnimation 3s infinite alternate-reverse;
+      animation-delay: calc(0.1s * var(--i));
+    }
+    
+    /* Ensure game assets are properly loaded but hidden */
+    .game-assets {
+      position: absolute;
+      visibility: hidden;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+    }
+  </style>
 </head>
 <body>
   <!-- Background Video - Same as index.html -->
@@ -25,6 +147,17 @@
       <h2 class="global-header">GAME</h2>
       
       <div id="game-menu" class="game-menu">
+        <div class="game-version">v2.0.49</div>
+        <div class="cyberpunk-title">
+          <span style="--i: 1;">C</span>
+          <span style="--i: 2;">y</span>
+          <span style="--i: 3;">b</span>
+          <span style="--i: 4;">e</span>
+          <span style="--i: 5;">r</span>
+          <span style="--i: 6;">P</span>
+          <span style="--i: 7;">a</span>
+          <span style="--i: 8;">c</span>
+        </div>
         <p class="game-insert-coin">INSERT COIN</p>
         <div class="game-start-container">
           <span class="interactive-text" id="start-game">START</span>
@@ -34,10 +167,10 @@
       <!-- Pacman Game Container - Integrated directly into the layout -->
       <div class="game-section">
         <div class="game-container" id="pacman-container">
-          <canvas id="canvas" width="400" height="450" tabindex="1"></canvas>
+          <canvas id="canvas" width="420" height="500" tabindex="1"></canvas>
           <div class="game-assets">
-            <img id="animation" src="pacman/animations.gif" width="140" height="20">
-            <img id="ghosts" src="pacman/copghost2.png" width="352" height="242">
+            <img id="animation" src="pacman/animations.gif" width="140" height="20" crossorigin="anonymous">
+            <img id="ghosts" src="pacman/copghost2.png" width="352" height="242" crossorigin="anonymous">
           </div>
         </div>
         
@@ -56,8 +189,229 @@
   <div class="copyright">© 2025 cd 2012</div>
   <div class="scanlines"></div>
   
-  <!-- Scripts -->
+  <!-- Scripts - Load in correct order -->
   <script src="../script.js"></script>
-  <script src="../pages/pacman/game.js"></script>
+  
+  <!-- Create sound directory -->
+  <script>
+    // Create audio folder structure in memory
+    const audioFiles = [
+      { name: "eat.wav", url: "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=" },
+      { name: "death.wav", url: "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=" },
+      { name: "eatghost.wav", url: "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=" },
+      { name: "powerup.wav", url: "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=" },
+      { name: "levelup.wav", url: "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=" }
+    ];
+  
+    // Create sound directory if needed
+    function createSoundFiles() {
+      // Create dummy Blob objects for the sound files
+      audioFiles.forEach(file => {
+        // Create a dummy audio element to ensure paths exist
+        const audio = new Audio();
+        audio.src = file.url;
+        audio.id = `sound_${file.name.split('.')[0]}`;
+        audio.style.display = "none";
+        document.body.appendChild(audio);
+      });
+    }
+    
+    // Execute sound files creation
+    createSoundFiles();
+  </script>
+  
+  <!-- Define shared game constants to avoid reference errors -->
+  <script>
+    // Global directional constants
+    const DIRECTION_RIGHT = 4;
+    const DIRECTION_UP = 3;
+    const DIRECTION_LEFT = 2;
+    const DIRECTION_BOTTOM = 1;
+  </script>
+  
+  <!-- Game js files in correct order -->
+  <script src="pacman/map.js"></script>
+  <script src="pacman/pacman.js"></script>
+  <script src="pacman/ghost.js"></script>
+  <script src="pacman/game.js"></script>
+  
+  <!-- Game start script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log("Game initialization starting...");
+      
+      // Track initialization state
+      let gameInitialized = false;
+      let initializationAttempts = 0;
+      const MAX_ATTEMPTS = 3;
+      
+      // Make sure all images are loaded first
+      const pacmanImage = document.getElementById('animation');
+      const ghostImage = document.getElementById('ghosts');
+      
+      // Preload game modules
+      function ensureGameModulesLoaded() {
+        return new Promise((resolve, reject) => {
+          // Check if essential game objects and functions exist
+          if (typeof MAP_CONFIG !== 'undefined' && 
+              typeof CYBERPACMAN !== 'undefined' && 
+              typeof Pacman !== 'undefined' && 
+              typeof Ghost !== 'undefined' &&
+              typeof startCyberPacman === 'function') {
+            console.log("All game modules loaded successfully");
+            resolve(true);
+          } else {
+            console.warn("Game modules not fully loaded, retrying...");
+            // Wait and check again
+            setTimeout(() => {
+              if (typeof MAP_CONFIG !== 'undefined' && 
+                  typeof CYBERPACMAN !== 'undefined' && 
+                  typeof Pacman !== 'undefined' && 
+                  typeof Ghost !== 'undefined' &&
+                  typeof startCyberPacman === 'function') {
+                console.log("Game modules loaded after retry");
+                resolve(true);
+              } else {
+                console.error("Game modules failed to load:", {
+                  MAP_CONFIG: typeof MAP_CONFIG,
+                  CYBERPACMAN: typeof CYBERPACMAN,
+                  Pacman: typeof Pacman,
+                  Ghost: typeof Ghost,
+                  startCyberPacman: typeof startCyberPacman
+                });
+                reject("Game modules not loaded properly");
+              }
+            }, 500);
+          }
+        });
+      }
+      
+      // Check if assets are loaded
+      function checkAssetsLoaded() {
+        return new Promise((resolve, reject) => {
+          const checkImages = () => {
+            if (pacmanImage.complete && ghostImage.complete) {
+              console.log("All assets loaded");
+              resolve(true);
+            } else {
+              console.log("Waiting for assets to load...");
+              setTimeout(checkImages, 100);
+            }
+          };
+          checkImages();
+        });
+      }
+      
+      // Initialize game components
+      async function initializeGame() {
+        console.log("Setting up game UI events");
+        
+        try {
+          // Ensure both assets and modules are loaded
+          await Promise.all([
+            checkAssetsLoaded(),
+            ensureGameModulesLoaded()
+          ]);
+          
+          gameInitialized = true;
+          console.log("Game successfully initialized");
+          
+          // Add glitch effect to game title occasionally
+          setInterval(() => {
+            const title = document.querySelector('.cyberpunk-title');
+            if (Math.random() < 0.1) {
+              title.style.textShadow = `
+                ${Math.random() * 10 - 5}px 0 5px #00fffc,
+                ${Math.random() * 10 - 5}px 0 10px #fc00ff`;
+              setTimeout(() => {
+                title.style.textShadow = '';
+              }, 200);
+            }
+          }, 2000);
+        } catch (error) {
+          console.error("Initialization error:", error);
+          initializationAttempts++;
+          
+          if (initializationAttempts < MAX_ATTEMPTS) {
+            console.log(`Retrying initialization (attempt ${initializationAttempts+1}/${MAX_ATTEMPTS})`);
+            setTimeout(initializeGame, 500);
+          } else {
+            alert("Game initialization failed. Please refresh the page and try again.");
+          }
+        }
+      }
+      
+      // Start initialization right away
+      initializeGame();
+      
+      // Get elements
+      const startButton = document.getElementById('start-game');
+      const gameMenu = document.getElementById('game-menu');
+      const gameSection = document.querySelector('.game-section');
+      const gameContainer = document.getElementById('pacman-container');
+      const backToMenu = document.getElementById('back-to-menu');
+      
+      // Start game when START button is clicked
+      startButton.addEventListener('click', function() {
+        console.log("Start button clicked - initializing game");
+        
+        if (!gameInitialized) {
+          console.warn("Game not fully initialized yet, trying to complete initialization");
+          // Force another initialization attempt
+          initializeGame().then(() => startGameSession());
+          return;
+        }
+        
+        startGameSession();
+      });
+      
+      // Function to start the actual game session
+      function startGameSession() {
+        // Hide menu and show game
+        gameMenu.style.display = 'none';
+        gameSection.style.display = 'flex';
+        gameContainer.style.display = 'block';
+        backToMenu.style.display = 'block';
+        
+        try {
+          // Initialize the game
+          if (typeof startCyberPacman === 'function') {
+            console.log("Starting CyberPacman game");
+            const result = startCyberPacman();
+            
+            if (!result) {
+              throw new Error("Game failed to start properly");
+            }
+          } else {
+            console.error("startCyberPacman function not found!");
+            throw new Error("Game functions not available");
+          }
+        } catch (error) {
+          console.error("Error starting game:", error);
+          alert("Game failed to start: " + error.message + "\nPlease refresh the page and try again.");
+          
+          // Return to menu on error
+          gameSection.style.display = 'none';
+          gameMenu.style.display = 'block';
+          return;
+        }
+        
+        // Focus on the canvas for keyboard controls
+        document.getElementById('canvas').focus();
+      }
+      
+      // Go back to menu when BACK button is clicked
+      backToMenu.addEventListener('click', function() {
+        console.log("Back to menu clicked");
+        gameSection.style.display = 'none';
+        gameMenu.style.display = 'block';
+        
+        // Ensure any game interval is cleared
+        if (typeof CYBERPACMAN !== 'undefined' && CYBERPACMAN.togglePause) {
+          CYBERPACMAN.togglePause();
+        }
+      });
+    });
+  </script>
 </body>
-</html> 
+</html>

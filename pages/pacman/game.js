@@ -1,220 +1,55 @@
-/**
- * Game initialization for the 2012 Pacman Game
- * This file handles the initial setup and UI interactions,
- * while delegating actual game logic to pacman/game.js
- */
-
-// Add global key handler for Pacman
-window.keyPressed = function(key) {
-    // Map arrow keys to Pacman directions
-    switch(key) {
-        case "ArrowLeft": // Left arrow
-            if (window.pacman) {
-                window.pacman.nextDirection = 2; // DIRECTION_LEFT
-            }
-            break;
-        case "ArrowUp": // Up arrow
-            if (window.pacman) {
-                window.pacman.nextDirection = 3; // DIRECTION_UP
-            }
-            break;
-        case "ArrowRight": // Right arrow
-            if (window.pacman) {
-                window.pacman.nextDirection = 4; // DIRECTION_RIGHT
-            }
-            break;
-        case "ArrowDown": // Down arrow
-            if (window.pacman) {
-                window.pacman.nextDirection = 1; // DIRECTION_BOTTOM
-            }
-            break;
-    }
-};
-
-// Expose function to reset game
-window.resetGame = function() {
-    if (window.restartPacmanAndGhosts) {
-        window.restartPacmanAndGhosts();
-        window.score = 0;
-        window.lives = 3;
-    }
-};
-
-// Expose function to pause game
-window.pauseGame = function() {
-    // Nothing specific to do here, as the game is controlled by the visibility
-};
-
-// Initialize game when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    const startGameBtn = document.getElementById('start-game');
-    const gameContainer = document.getElementById('pacman-container');
-    const gameMenu = document.getElementById('game-menu');
-    const backToMenuBtn = document.getElementById('back-to-menu');
+// Main game module for Cyberpunk Pac-Man
+const CYBERPACMAN = (function() {
+    console.log("Initializing CYBERPACMAN module");
     
-    // Get game canvas elements
+    // Canvas setup
 const canvas = document.getElementById("canvas");
+const canvasContext = canvas.getContext("2d");
 const pacmanFrames = document.getElementById("animation");
 const ghostFrames = document.getElementById("ghosts");
 
-    if (canvas) {
-        const canvasContext = canvas.getContext("2d");
-        
-        // Calculate map dimensions
-        const oneBlockSize = 16;
-        const wallSpaceWidth = oneBlockSize / 1.6;
-        const wallOffset = (oneBlockSize - wallSpaceWidth) / 2;
-        const wallInnerColor = "#061a1f";
-        const wallOuterColor = "#00e6ff";
-        const foodColor = "#00ff77";
-        const backgroundColor = "#030f12";
-        
-        // Set ghost targets
-        const randomTargetsForGhosts = [
-            { x: wallOffset + 1 * oneBlockSize, y: wallOffset + 1 * oneBlockSize },
-            { x: wallOffset + 1 * oneBlockSize, y: (23 * oneBlockSize) - wallOffset },
-            { x: (21 * oneBlockSize) - wallOffset, y: wallOffset + 1 * oneBlockSize },
-            { x: (21 * oneBlockSize) - wallOffset, y: (23 * oneBlockSize) - wallOffset },
-        ];
-        
-        // Add keyboard focus to the game canvas
-        canvas.focus();
-        canvas.addEventListener('click', () => {
-            canvas.focus();
-        });
-    }
-    
-    // Add event listener for the START button
-    if (startGameBtn) {
-        startGameBtn.addEventListener('click', () => {
-            // Hide menu and show game
-            if (gameMenu) gameMenu.style.display = 'none';
-            if (gameContainer) gameContainer.style.display = 'block';
-            if (backToMenuBtn) backToMenuBtn.style.display = 'block';
-            
-            // Initialize or reset game
-            if (gameInterval) {
-                clearInterval(gameInterval);
-            }
-            
-            resetGame();
-            
-            // Start game loop
-            gameInterval = setInterval(gameLoop, 1000 / fps);
-        });
-    }
-    
-    // Setup back to menu button if it exists
-    if (backToMenuBtn) {
-        backToMenuBtn.addEventListener('click', () => {
-            if (gameContainer) gameContainer.style.display = 'none';
-            if (backToMenuBtn) backToMenuBtn.style.display = 'none';
-            if (gameMenu) gameMenu.style.display = 'block';
-            
-            // Pause game
-            pauseGame();
-        });
-    }
-    
-    // Add keyboard event listeners
-    window.addEventListener("keydown", (event) => {
-        let k = event.key;
-        setTimeout(() => {
-            if (k == "ArrowLeft" || k == "a" || k == "A") {
-                // left arrow or a
-                if (pacman) pacman.nextDirection = DIRECTION_LEFT;
-            } else if (k == "ArrowUp" || k == "w" || k == "W") {
-                // up arrow or w
-                if (pacman) pacman.nextDirection = DIRECTION_UP;
-            } else if (k == "ArrowRight" || k == "d" || k == "D") {
-                // right arrow or d
-                if (pacman) pacman.nextDirection = DIRECTION_RIGHT;
-            } else if (k == "ArrowDown" || k == "s" || k == "S") {
-                // bottom arrow or s
-                if (pacman) pacman.nextDirection = DIRECTION_BOTTOM;
-            }
-        }, 1);
-    });
-});
+    // Game settings
+    const GAME_SETTINGS = {
+        fps: 30,
+        oneBlockSize: 20,
+        wallSpaceWidth: 12,
+        lives: 3,
+        maxLevel: 5,
+        currentLevel: 1,
+        speedMultiplier: [1, 1.15, 1.3, 1.45, 1.6],
+        flashColors: ['#00e5ff', '#ff00e5', '#e5ff00', '#e500ff'],
+        debug: false
+    };
 
-/**
- * Loads Pacman game scripts dynamically
- * Ensures all required scripts are loaded before starting the game
- */
-function loadPacmanScripts() {
-    // Scripts needed for the game to run
-    const scripts = [
-        'pacman/ghost.js',
-        'pacman/pacman.js',
-        'pacman/game.js'
-    ];
-    
-    // Load scripts in sequence
-    let loadedCount = 0;
-    scripts.forEach(src => {
-        const script = document.createElement('script');
-        script.src = src;
-        script.onload = () => {
-            loadedCount++;
-            if (loadedCount === scripts.length) {
-                console.log('All Pacman scripts loaded');
-            }
-        };
-        document.body.appendChild(script);
-    });
-}
+    // Game state variables
+    let score = 0;
+    let level = 1;
+    let ghosts = [];
+    let pacman;
+    let gameInterval;
+    let wallOffset;
+    let wallInnerColor = "#001119";
+    let dotColor = "#00e5ff";
+    let wallColor = "#342DCA";
+    let levelTransition = false;
+    let totalDotsCount = 0;
+    let dotsEaten = 0;
+    let gameState = "menu"; // menu, playing, transition, gameover
+    let transitionTimer = 0;
+    let ghostCount = 4;
+    let paused = false;
+    let sound = true;
 
-/**
- * Fixes keyboard control issues by ensuring the canvas has focus
- * Called after all game scripts are loaded
- */
-function fixKeyboardControls() {
-    const canvas = document.getElementById('canvas');
-    if (canvas) {
-        canvas.focus();
-        // Add click handler to refocus canvas
-        canvas.addEventListener('click', () => {
-            canvas.focus();
-        });
-    }
-}
+    // Global reference to pacman for ghost targeting
+    window.pacman = null;
 
-/**
- * Game code for the 2012 Pacman-style game
- * Contains all game mechanics, rendering, and controls
- */
-
-// Global variables and game state
-let canvas;
-let canvasContext;
-let pacmanFrames;
-let ghostFrames;
-let fps = 30;
-let gameInterval;
-
-// Game objects and state
-let pacman;
-let ghosts = [];
-let score = 0;
-let lives = 3;
-let ghostCount = 4;
-
-// Game constants
+    // Directional constants
 const DIRECTION_RIGHT = 4;
 const DIRECTION_UP = 3;
 const DIRECTION_LEFT = 2;
 const DIRECTION_BOTTOM = 1;
 
-// Game dimensions and appearance
-let oneBlockSize = 16;
-let wallSpaceWidth = oneBlockSize / 1.6;
-let wallOffset = (oneBlockSize - wallSpaceWidth) / 2;
-let wallInnerColor = "#061a1f";
-let wallOuterColor = "#00e6ff";
-let foodColor = "#00ff77";
-let backgroundColor = "#030f12";
-
-// Ghost sprite positions
+    // Ghost image locations in spritesheet
 let ghostImageLocations = [
     { x: 0, y: 0 },
     { x: 176, y: 0 },
@@ -222,832 +57,691 @@ let ghostImageLocations = [
     { x: 176, y: 121 },
 ];
 
-// Map offsets for centering
-let xOffset;
-let yOffset;
+    // Random targets for ghosts to use when not chasing pacman
+    let randomTargetsForGhosts = [];
 
-// Game map (1 = wall, 2 = food, 0 = empty)
-let map = [
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
-    [1, 2, 1, 1, 1, 2, 1, 1, 1, 2, 1, 2, 1, 1, 1, 2, 1, 1, 1, 2, 1],
-    [1, 2, 1, 1, 1, 2, 1, 1, 1, 2, 1, 2, 1, 1, 1, 2, 1, 1, 1, 2, 1],
-    [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
-    [1, 2, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 2, 1],
-    [1, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 1],
-    [1, 1, 1, 1, 1, 2, 1, 1, 1, 2, 1, 2, 1, 1, 1, 2, 1, 1, 1, 1, 1],
-    [0, 0, 0, 0, 1, 2, 1, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1, 0, 0, 0, 0],
-    [1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 2, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1],
-    [1, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 1],
-    [1, 1, 1, 1, 1, 2, 1, 2, 1, 2, 2, 2, 1, 2, 1, 2, 1, 1, 1, 1, 1],
-    [0, 0, 0, 0, 1, 2, 1, 2, 1, 1, 1, 1, 1, 2, 1, 2, 1, 0, 0, 0, 0],
-    [0, 0, 0, 0, 1, 2, 1, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1, 0, 0, 0, 0],
-    [1, 1, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1],
-    [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
-    [1, 2, 1, 1, 1, 2, 1, 1, 1, 2, 1, 2, 1, 1, 1, 2, 1, 1, 1, 2, 1],
-    [1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1],
-    [1, 1, 2, 2, 1, 2, 1, 2, 1, 1, 1, 1, 1, 2, 1, 2, 1, 2, 2, 1, 1],
-    [1, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 1],
-    [1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1],
-    [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-];
+    // Sound effects
+    let sfx = {
+        eat: new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="),
+        death: new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="),
+        ghost: new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="),
+        powerup: new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="),
+        levelup: new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=")
+    };
 
-// Ghost random target positions
-let randomTargetsForGhosts;
+    // Initialize all audio to low volume
+    for (let sound in sfx) {
+        sfx[sound].volume = 0.3;
+    }
 
-// Initialize game when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    // Initial UI setup
-    const startGameBtn = document.getElementById('start-game');
-    const gameContainer = document.getElementById('pacman-container');
-    const gameMenu = document.getElementById('game-menu');
-    const backToMenuBtn = document.getElementById('back-to-menu');
-    
-    // Get game canvas elements
-    canvas = document.getElementById("canvas");
-    pacmanFrames = document.getElementById("animation");
-    ghostFrames = document.getElementById("ghosts");
-    
-    if (canvas) {
-        canvasContext = canvas.getContext("2d");
+    // Resize game elements to fit canvas
+    function resizeGame() {
+        console.log("Resizing game to fit canvas dimensions:", canvas.width, canvas.height);
         
-        // Calculate map dimensions
-        let mapWidth = 21 * oneBlockSize;
-        let mapHeight = 23 * oneBlockSize;
-        xOffset = (canvas.width - mapWidth) / 2;
-        yOffset = (canvas.height - mapHeight) / 2;
+        // Make sure MAP_CONFIG is available
+        if (!MAP_CONFIG || !MAP_CONFIG.map) {
+            console.error("MAP_CONFIG is not available yet");
+            return;
+        }
         
-        // Set ghost targets
+        GAME_SETTINGS.oneBlockSize = Math.floor(canvas.width / MAP_CONFIG.map[0].length);
+        wallOffset = (GAME_SETTINGS.oneBlockSize - GAME_SETTINGS.wallSpaceWidth) / 2;
+        
+        console.log("Block size set to:", GAME_SETTINGS.oneBlockSize);
+        
+        // Update random targets
         randomTargetsForGhosts = [
-    { x: xOffset + 1 * oneBlockSize, y: yOffset + 1 * oneBlockSize },
-    { x: xOffset + 1 * oneBlockSize, y: yOffset + (map.length - 2) * oneBlockSize },
-    { x: xOffset + (map[0].length - 2) * oneBlockSize, y: yOffset + oneBlockSize },
-            { x: xOffset + (map[0].length - 2) * oneBlockSize, y: yOffset + (map.length - 2) * oneBlockSize },
+            { x: 1 * GAME_SETTINGS.oneBlockSize, y: 1 * GAME_SETTINGS.oneBlockSize },
+            { x: 1 * GAME_SETTINGS.oneBlockSize, y: (MAP_CONFIG.map.length - 2) * GAME_SETTINGS.oneBlockSize },
+            { x: (MAP_CONFIG.map[0].length - 2) * GAME_SETTINGS.oneBlockSize, y: GAME_SETTINGS.oneBlockSize },
+            { x: (MAP_CONFIG.map[0].length - 2) * GAME_SETTINGS.oneBlockSize, y: (MAP_CONFIG.map.length - 2) * GAME_SETTINGS.oneBlockSize },
         ];
         
-        // Add keyboard focus to the game canvas
-        canvas.focus();
-        canvas.addEventListener('click', () => {
-            canvas.focus();
-        });
+        // Make targets available globally for ghosts
+        window.randomTargetsForGhosts = randomTargetsForGhosts;
     }
-    
-    // Add event listener for the START button
-    if (startGameBtn) {
-        startGameBtn.addEventListener('click', () => {
-            // Hide menu and show game
-            if (gameMenu) gameMenu.style.display = 'none';
-            if (gameContainer) gameContainer.style.display = 'block';
-            if (backToMenuBtn) backToMenuBtn.style.display = 'block';
-            
-            // Initialize or reset game
-            if (gameInterval) {
-                clearInterval(gameInterval);
-            }
-            
-            resetGame();
-            
-            // Start game loop
-            gameInterval = setInterval(gameLoop, 1000 / fps);
-        });
-    }
-    
-    // Setup back to menu button if it exists
-    if (backToMenuBtn) {
-        backToMenuBtn.addEventListener('click', () => {
-            if (gameContainer) gameContainer.style.display = 'none';
-            if (backToMenuBtn) backToMenuBtn.style.display = 'none';
-            if (gameMenu) gameMenu.style.display = 'block';
-            
-            // Pause game
-            pauseGame();
-        });
-    }
-    
-    // Add keyboard event listeners
-    window.addEventListener("keydown", (event) => {
-        let k = event.key;
-        setTimeout(() => {
-            if (k == "ArrowLeft" || k == "a" || k == "A") {
-                // left arrow or a
-                if (pacman) pacman.nextDirection = DIRECTION_LEFT;
-            } else if (k == "ArrowUp" || k == "w" || k == "W") {
-                // up arrow or w
-                if (pacman) pacman.nextDirection = DIRECTION_UP;
-            } else if (k == "ArrowRight" || k == "d" || k == "D") {
-                // right arrow or d
-                if (pacman) pacman.nextDirection = DIRECTION_RIGHT;
-            } else if (k == "ArrowDown" || k == "s" || k == "S") {
-                // bottom arrow or s
-                if (pacman) pacman.nextDirection = DIRECTION_BOTTOM;
-            }
-        }, 1);
-    });
-});
 
-// Utility function to create rectangles (with optional glow)
-let createRect = (x, y, width, height, color, glowColor = null, glowSize = 0) => {
-    if (!canvasContext) return;
-    
-    canvasContext.fillStyle = color;
-    canvasContext.fillRect(x, y, width, height);
-    
-    if (glowColor) {
-        canvasContext.shadowColor = glowColor;
+    // Create Rectangle helper
+    function createRect(x, y, width, height, color) {
+        canvasContext.fillStyle = color;
+        canvasContext.fillRect(x, y, width, height);
+    }
+
+    // Create neon glow effect
+    function createNeonRect(x, y, width, height, color, glowColor, glowSize = 5) {
         canvasContext.shadowBlur = glowSize;
-        canvasContext.strokeStyle = glowColor;
-        canvasContext.lineWidth = 1;
-        canvasContext.strokeRect(x, y, width, height);
+        canvasContext.shadowColor = glowColor;
+        canvasContext.fillStyle = color;
+        canvasContext.fillRect(x, y, width, height);
         canvasContext.shadowBlur = 0;
     }
-};
 
-// Game loop - calls update and draw functions
-let gameLoop = () => {
-    update();
-    draw();
-};
+    // Count total dots on map
+    function countTotalDots() {
+        let count = 0;
+        for (let i = 0; i < MAP_CONFIG.map.length; i++) {
+            for (let j = 0; j < MAP_CONFIG.map[0].length; j++) {
+                if (MAP_CONFIG.map[i][j] === 2) {
+                    count++;
+                }
+            }
+        }
+        console.log("Total dots in map:", count);
+        return count;
+    }
 
-// Create new Pacman object
-let createNewPacman = () => {
+    // Play sound effect
+    function playSound(sound) {
+        if (window.sound && sfx[sound]) {
+            sfx[sound].currentTime = 0;
+            sfx[sound].play().catch(e => console.log("Audio play error:", e));
+        }
+    }
+
+    // Create new Pacman instance
+    function createNewPacman() {
+        console.log("Creating new Pacman instance");
+        
+        // Ensure level is valid
+        level = Math.max(1, Math.min(level, GAME_SETTINGS.maxLevel));
+        
     pacman = new Pacman(
-        xOffset + oneBlockSize,
-        yOffset + oneBlockSize,
-        oneBlockSize,
-        oneBlockSize,
-        oneBlockSize / 5
-    );
-};
-
-// Create ghost objects
-let createGhosts = () => {
-    ghosts = [];
-    for (let i = 0; i < ghostCount * 2; i++) {
-        let newGhost = new Ghost(
-            xOffset + 9 * oneBlockSize + (i % 2 == 0 ? 0 : 1) * oneBlockSize,
-            yOffset + 10 * oneBlockSize + (i % 2 == 0 ? 0 : 1) * oneBlockSize,
-            oneBlockSize,
-            oneBlockSize,
-            pacman.speed / 2,
-            ghostImageLocations[i % 4].x,
-            ghostImageLocations[i % 4].y,
-            124,
-            116,
-            6 + i
+            GAME_SETTINGS.oneBlockSize,
+            GAME_SETTINGS.oneBlockSize,
+            GAME_SETTINGS.oneBlockSize,
+            GAME_SETTINGS.oneBlockSize,
+            GAME_SETTINGS.oneBlockSize / 5 * GAME_SETTINGS.speedMultiplier[level-1]
         );
-        ghosts.push(newGhost);
-    }
-};
-
-// Reset game function
-let resetGame = () => {
-    score = 0;
-    lives = 3;
-    createNewPacman();
-    createGhosts();
-};
-
-// Pause game function
-let pauseGame = () => {
-    if (gameInterval) {
-        clearInterval(gameInterval);
-        gameInterval = null;
-    }
-};
-
-// Handle ghost collision
-let onGhostCollision = () => {
-    lives--;
-    
-    if (lives === 0) {
-        // Game over - could add game over screen here
-        pauseGame();
-        setTimeout(() => {
-            resetGame();
-            gameInterval = setInterval(gameLoop, 1000 / fps);
-        }, 2000);
-    } else {
-        createNewPacman();
-        createGhosts();
-    }
-};
-
-// Update game state
-let update = () => {
-    if (!pacman) return;
-    
-    pacman.moveProcess();
-    pacman.eat();
-    updateGhosts();
-    if (pacman.checkGhostCollision(ghosts)) {
-        onGhostCollision();
-    }
-};
-
-// Update ghosts
-let updateGhosts = () => {
-    for (let i = 0; i < ghosts.length; i++) {
-        ghosts[i].moveProcess();
-    }
-};
-
-// Draw game elements
-let draw = () => {
-    if (!canvasContext) return;
-    
-    canvasContext.clearRect(0, 0, canvas.width, canvas.height);
-    createRect(0, 0, canvas.width, canvas.height, backgroundColor);
-    
-    // Draw a tech HUD frame around the game area
-    canvasContext.strokeStyle = "#00e6ff";
-    canvasContext.lineWidth = 2;
-    canvasContext.shadowColor = "#00e6ff";
-    canvasContext.shadowBlur = 10;
-    canvasContext.strokeRect(5, 5, canvas.width - 10, canvas.height - 10);
-    
-    // Draw game title at top of screen
-    canvasContext.font = "20px 'Orbitron', sans-serif";
-    canvasContext.fillStyle = "#00e6ff";
-    canvasContext.textAlign = "center";
-    canvasContext.fillText("2012", canvas.width / 2, 25);
-    
-    // Add tech-style decorative elements
-    canvasContext.beginPath();
-    canvasContext.moveTo(10, 35);
-    canvasContext.lineTo(canvas.width / 2 - 80, 35);
-    canvasContext.strokeStyle = "#00e6ff";
-    canvasContext.lineWidth = 1;
-    canvasContext.stroke();
-    
-    canvasContext.beginPath();
-    canvasContext.moveTo(canvas.width / 2 + 80, 35);
-    canvasContext.lineTo(canvas.width - 10, 35);
-    canvasContext.stroke();
-    
-    // Reset shadow for rest of drawing
-    canvasContext.shadowBlur = 0;
-    canvasContext.textAlign = "left";
-    
-    drawWalls();
-    drawFoods();
-    drawGhosts();
-    if (pacman) pacman.draw();
-    drawScore();
-    drawRemainingLives();
-};
-
-// Draw walls
-let drawWalls = () => {
-    for (let i = 0; i < map.length; i++) {
-        for (let j = 0; j < map[0].length; j++) {
-            if (map[i][j] == 1) {
-                // Draw walls with glowing effect
-                createRect(
-                    xOffset + j * oneBlockSize,
-                    yOffset + i * oneBlockSize,
-                    oneBlockSize,
-                    oneBlockSize,
-                    wallInnerColor,
-                    wallOuterColor,
-                    3
-                );
-                
-                if (j > 0 && map[i][j - 1] == 1) {
-                    createRect(
-                        xOffset + j * oneBlockSize,
-                        yOffset + i * oneBlockSize + wallOffset,
-                        wallSpaceWidth + wallOffset,
-                        wallSpaceWidth,
-                        wallInnerColor
-                    );
-                }
-
-                if (j < map[0].length - 1 && map[i][j + 1] == 1) {
-                    createRect(
-                        xOffset + j * oneBlockSize + wallOffset,
-                        yOffset + i * oneBlockSize + wallOffset,
-                        wallSpaceWidth + wallOffset,
-                        wallSpaceWidth,
-                        wallInnerColor
-                    );
-                }
-
-                if (i < map.length - 1 && map[i + 1][j] == 1) {
-                    createRect(
-                        xOffset + j * oneBlockSize + wallOffset,
-                        yOffset + i * oneBlockSize + wallOffset,
-                        wallSpaceWidth,
-                        wallSpaceWidth + wallOffset,
-                        wallInnerColor
-                    );
-                }
-
-                if (i > 0 && map[i - 1][j] == 1) {
-                    createRect(
-                        xOffset + j * oneBlockSize + wallOffset,
-                        yOffset + i * oneBlockSize,
-                        wallSpaceWidth,
-                        wallSpaceWidth + wallOffset,
-                        wallInnerColor
-                    );
-                }
-            }
-        }
-    }
-};
-
-// Draw food items
-let drawFoods = () => {
-    for (let i = 0; i < map.length; i++) {
-        for (let j = 0; j < map[0].length; j++) {
-            if (map[i][j] == 2) {
-                // Draw dollar signs instead of dots
-                canvasContext.font = "10px 'Orbitron', sans-serif";
-                canvasContext.fillStyle = foodColor;
-                canvasContext.textAlign = "center";
-                canvasContext.textBaseline = "middle";
-                
-                // Add glow effect
-                canvasContext.shadowColor = foodColor;
-                canvasContext.shadowBlur = 5;
-                
-                // Draw the dollar sign
-                canvasContext.fillText(
-                    "$", 
-                    xOffset + j * oneBlockSize + oneBlockSize / 2,
-                    yOffset + i * oneBlockSize + oneBlockSize / 2
-                );
-                
-                // Reset shadow
-                canvasContext.shadowBlur = 0;
-            }
-        }
-    }
-};
-
-// Draw ghosts
-let drawGhosts = () => {
-    for (let i = 0; i < ghosts.length; i++) {
-        ghosts[i].draw();
-    }
-};
-
-// Draw score
-let drawScore = () => {
-    // Calculate positions for the HUD border
-    let scoreHudX = 10;
-    let scoreHudY = canvas.height - 35;
-    let scoreHudWidth = 120;
-    let scoreHudHeight = 25;
-    
-    // Draw the score text
-    canvasContext.font = "16px 'Orbitron', sans-serif";
-    canvasContext.fillStyle = "#00e6ff";
-    canvasContext.textAlign = "left";
-    canvasContext.fillText(
-        "SCORE: " + score,
-        scoreHudX + 10,
-        scoreHudY + 18
-    );
-    
-    // Draw mini HUD frame for score
-    canvasContext.strokeStyle = "#00e6ff";
-    canvasContext.lineWidth = 1;
-    canvasContext.beginPath();
-    canvasContext.rect(scoreHudX, scoreHudY, scoreHudWidth, scoreHudHeight);
-    canvasContext.stroke();
-    
-    // Reset text alignment
-    canvasContext.textAlign = "left";
-};
-
-// Draw remaining lives
-let drawRemainingLives = () => {
-    // Calculate positions for the HUD border
-    let livesLabelX = canvas.width - 20;
-    let livesY = canvas.height - 15;
-    let livesWidth = 60 + (lives * (oneBlockSize + 5));
-    let livesHudX = canvas.width - livesWidth - 20;
-    let livesHudY = canvas.height - 35;
-    
-    // Draw the lives label
-    canvasContext.font = "16px 'Orbitron', sans-serif";
-    canvasContext.fillStyle = "#00e6ff";
-    canvasContext.textAlign = "right";
-    canvasContext.fillText("LIVES:", livesHudX + 60, livesY);
-    canvasContext.textAlign = "left";
-
-    // Draw Pacman lives icons in a row
-    for (let i = 0; i < lives; i++) {
-        canvasContext.drawImage(
-            pacmanFrames,
-            2 * oneBlockSize,
-            0,
-            oneBlockSize,
-            oneBlockSize,
-            livesHudX + 65 + i * (oneBlockSize + 5),
-            livesHudY + 5,
-            oneBlockSize,
-            oneBlockSize
-        );
-    }
-    
-    // Draw mini HUD frame for lives
-    canvasContext.strokeStyle = "#00e6ff";
-    canvasContext.lineWidth = 1;
-    canvasContext.beginPath();
-    canvasContext.rect(livesHudX, livesHudY, livesWidth, 25);
-    canvasContext.stroke();
-};
-
-// Pacman class definition
-class Pacman {
-    constructor(x, y, width, height, speed) {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-        this.speed = speed;
-        this.direction = 4; // Default to right
-        this.nextDirection = 4;
-        this.frameCount = 7;
-        this.currentFrame = 1;
-        setInterval(() => {
-            this.changeAnimation();
-        }, 100);
-    }
-
-    changeAnimation() {
-        this.currentFrame = this.currentFrame == this.frameCount ? 1 : this.currentFrame + 1;
-    }
-
-    draw() {
-        if (!canvasContext) return;
         
-        canvasContext.save();
-        canvasContext.translate(
-            this.x + oneBlockSize / 2,
-            this.y + oneBlockSize / 2
-        );
-        canvasContext.rotate((this.direction * 90 * Math.PI) / 180);
-        canvasContext.translate(
-            -this.x - oneBlockSize / 2,
-            -this.y - oneBlockSize / 2
-        );
-        canvasContext.drawImage(
-            pacmanFrames,
-            (this.currentFrame - 1) * oneBlockSize,
-            0,
-            oneBlockSize,
-            oneBlockSize,
-            this.x,
-            this.y,
-            this.width,
-            this.height
-        );
-        canvasContext.restore();
+        // Make pacman globally available for ghost targeting
+        window.pacman = pacman;
     }
 
-    moveProcess() {
-        if (this.isInRangeOfBlock(this.x, this.y)) {
-            this.changeDirectionIfPossible();
-    }
+    // Create Ghosts
+    function createGhosts() {
+        console.log("Creating ghosts");
+        ghosts = [];
         
-        if (this.checkCollision(this.x, this.y, this.direction)) {
+        // Ensure we have a valid pacman instance with speed
+        if (!pacman || !pacman.speed) {
+            console.error("Cannot create ghosts: pacman instance is not properly initialized");
             return;
         }
         
-        switch (this.direction) {
-            case DIRECTION_RIGHT:
-                this.x += this.speed;
-                break;
-            case DIRECTION_UP:
-                this.y -= this.speed;
-                break;
-            case DIRECTION_LEFT:
-                this.x -= this.speed;
-                break;
-            case DIRECTION_BOTTOM:
-                this.y += this.speed;
-                break;
+        for (let i = 0; i < ghostCount; i++) {
+            let newGhost = new Ghost(
+                9 * GAME_SETTINGS.oneBlockSize + (i % 2 == 0 ? 0 : 1) * GAME_SETTINGS.oneBlockSize,
+                10 * GAME_SETTINGS.oneBlockSize + (i % 2 == 0 ? 0 : 1) * GAME_SETTINGS.oneBlockSize,
+                GAME_SETTINGS.oneBlockSize,
+                GAME_SETTINGS.oneBlockSize,
+                pacman.speed / 2,
+                ghostImageLocations[i % 4].x,
+                ghostImageLocations[i % 4].y,
+                124,
+                116,
+                6 + i
+            );
+            ghosts.push(newGhost);
         }
+        
+        // Make ghosts available globally
+        window.ghosts = ghosts;
     }
 
-    eat() {
-        for (let i = 0; i < map.length; i++) {
-            for (let j = 0; j < map[0].length; j++) {
-                if (
-                    map[i][j] == 2 &&
-                    this.getBlockX() == j &&
-                    this.getBlockY() == i
-                ) {
-                    map[i][j] = 0;
-                    score++;
+    // Draw foods/dots
+    function drawFoods() {
+        for (let i = 0; i < MAP_CONFIG.map.length; i++) {
+            for (let j = 0; j < MAP_CONFIG.map[0].length; j++) {
+                if (MAP_CONFIG.map[i][j] === 2) {
+                    // Standard dot as dollar sign with neon glow
+                    const dotSize = GAME_SETTINGS.oneBlockSize / 1.5;
+                    const dotX = j * GAME_SETTINGS.oneBlockSize + GAME_SETTINGS.oneBlockSize / 2;
+                    const dotY = i * GAME_SETTINGS.oneBlockSize + GAME_SETTINGS.oneBlockSize / 2;
+                    
+                    // Draw dollar sign
+                    canvasContext.font = `${dotSize}px Emulogic`;
+                    canvasContext.textAlign = "center";
+                    canvasContext.textBaseline = "middle";
+                    canvasContext.shadowBlur = 8;
+                    canvasContext.shadowColor = dotColor;
+                    canvasContext.fillStyle = dotColor;
+                    canvasContext.fillText("$", dotX, dotY);
+                    canvasContext.shadowBlur = 0;
+                    canvasContext.textAlign = "left";
+                    canvasContext.textBaseline = "alphabetic";
+                }
+                else if (MAP_CONFIG.map[i][j] === 4) {
+                    // Power pellet as larger dollar sign with stronger glow
+                    const pelletSize = GAME_SETTINGS.oneBlockSize / 1.1;
+                    const pelletX = j * GAME_SETTINGS.oneBlockSize + GAME_SETTINGS.oneBlockSize / 2;
+                    const pelletY = i * GAME_SETTINGS.oneBlockSize + GAME_SETTINGS.oneBlockSize / 2;
+                    
+                    // Create pulsing effect
+                    const pulseSize = 0.8 + 0.2 * Math.sin(Date.now() / 200);
+                    const fontSize = pelletSize * pulseSize;
+                    
+                    // Draw large dollar sign with pulsing effect
+                    canvasContext.font = `bold ${fontSize}px Emulogic`;
+                    canvasContext.textAlign = "center";
+                    canvasContext.textBaseline = "middle";
+                    canvasContext.shadowBlur = 15;
+                    canvasContext.shadowColor = "#ff00e5";
+                    canvasContext.fillStyle = "#ff00e5";
+                    canvasContext.fillText("$", pelletX, pelletY);
+                    canvasContext.shadowBlur = 0;
+                    canvasContext.textAlign = "left";
+                    canvasContext.textBaseline = "alphabetic";
                 }
             }
         }
     }
 
-    checkGhostCollision(ghosts) {
-        for (let i = 0; i < ghosts.length; i++) {
-            let ghost = ghosts[i];
-            if (
-                ghost.getBlockX() == this.getBlockX() &&
-                ghost.getBlockY() == this.getBlockY()
-            ) {
-                return true;
-            }
-        }
-        return false;
-    }
+    // Draw remaining lives
+    function drawRemainingLives() {
+        canvasContext.font = "16px Emulogic";
+        canvasContext.fillStyle = "#00e5ff";
+        canvasContext.shadowBlur = 5;
+        canvasContext.shadowColor = "#00e5ff";
+        canvasContext.fillText("LIVES:", 10, canvas.height - 20);
+        canvasContext.shadowBlur = 0;
 
-    changeDirectionIfPossible() {
-        if (this.direction == this.nextDirection) return;
-        
-        let tempDirection = this.direction;
-        this.direction = this.nextDirection;
-        
-        if (this.checkCollision(this.x, this.y, this.nextDirection)) {
-            this.direction = tempDirection;
-        }
-    }
-
-    getBlockX() {
-        return parseInt((this.x - xOffset) / oneBlockSize);
-    }
-
-    getBlockY() {
-        return parseInt((this.y - yOffset) / oneBlockSize);
-    }
-
-    getNextBlockX() {
-        if (this.direction == DIRECTION_LEFT) {
-            return this.getBlockX() - 1;
-        } else if (this.direction == DIRECTION_RIGHT) {
-            return this.getBlockX() + 1;
-        }
-        return this.getBlockX();
-    }
-
-    getNextBlockY() {
-        if (this.direction == DIRECTION_UP) {
-            return this.getBlockY() - 1;
-        } else if (this.direction == DIRECTION_BOTTOM) {
-            return this.getBlockY() + 1;
-        }
-        return this.getBlockY();
-    }
-
-    isInRangeOfBlock(x, y) {
-        let blockX = parseInt((x - xOffset) / oneBlockSize);
-        let blockY = parseInt((y - yOffset) / oneBlockSize);
-        return (
-            x - xOffset - blockX * oneBlockSize < oneBlockSize / 3 &&
-            y - yOffset - blockY * oneBlockSize < oneBlockSize / 3
-        );
-    }
-
-    checkCollision(x, y, direction) {
-        let blockX = parseInt((x - xOffset) / oneBlockSize);
-        let blockY = parseInt((y - yOffset) / oneBlockSize);
-        
-        if (direction == DIRECTION_RIGHT) {
-            blockX += 1;
-        } else if (direction == DIRECTION_BOTTOM) {
-            blockY += 1;
-        } else if (direction == DIRECTION_LEFT) {
-            blockX -= 1;
-        } else if (direction == DIRECTION_UP) {
-            blockY -= 1;
-        }
-        
-        return blockX < 0 || blockX >= map[0].length || blockY < 0 || blockY >= map.length || map[blockY][blockX] == 1;
-    }
-}
-
-// Ghost class definition
-class Ghost {
-    constructor(
-        x,
-        y,
-        width,
-        height,
-        speed,
-        imageX,
-        imageY,
-        imageWidth,
-        imageHeight,
-        range
-    ) {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-        this.speed = speed;
-        this.direction = DIRECTION_RIGHT;
-        this.imageX = imageX;
-        this.imageY = imageY;
-        this.imageWidth = imageWidth;
-        this.imageHeight = imageHeight;
-        this.range = range;
-        this.randomTargetIndex = parseInt(Math.random() * 4);
-        this.target = randomTargetsForGhosts[this.randomTargetIndex];
-        setInterval(() => {
-            this.changeRandomDirection();
-        }, 10000);
-    }
-
-    changeRandomDirection() {
-        this.randomTargetIndex += parseInt(Math.random() * 4);
-        this.randomTargetIndex = this.randomTargetIndex % 4;
-    }
-
-    moveProcess() {
-        if (this.isInRangeOfBlock(this.x, this.y)) {
-            this.changeDirectionIfPossible();
-        }
-        
-        if (this.checkCollision(this.x, this.y, this.direction)) {
-            return;
-        }
-        
-        switch (this.direction) {
-            case DIRECTION_RIGHT:
-                this.x += this.speed;
-                break;
-            case DIRECTION_UP:
-                this.y -= this.speed;
-                break;
-            case DIRECTION_LEFT:
-                this.x -= this.speed;
-                break;
-            case DIRECTION_BOTTOM:
-                this.y += this.speed;
-                break;
-        }
-    }
-
-    draw() {
-        if (!canvasContext) return;
-        
-        canvasContext.save();
+        for (let i = 0; i < GAME_SETTINGS.lives; i++) {
         canvasContext.drawImage(
-            ghostFrames,
-            this.imageX,
-            this.imageY,
-            this.imageWidth,
-            this.imageHeight,
-            this.x,
-            this.y,
-            this.width,
-            this.height
-        );
-        canvasContext.restore();
+            pacmanFrames,
+                2 * GAME_SETTINGS.oneBlockSize,
+                0,
+                GAME_SETTINGS.oneBlockSize,
+                GAME_SETTINGS.oneBlockSize,
+                65 + i * (GAME_SETTINGS.oneBlockSize + 5),
+                canvas.height - 36,
+                GAME_SETTINGS.oneBlockSize,
+                GAME_SETTINGS.oneBlockSize
+            );
+        }
     }
 
-    changeDirectionIfPossible() {
-        let tempDirection = this.direction;
+    // Draw score
+    function drawScore() {
+        canvasContext.font = "16px Emulogic";
+        canvasContext.fillStyle = "#00e5ff";
+        canvasContext.shadowBlur = 5;
+        canvasContext.shadowColor = "#00e5ff";
+        canvasContext.fillText("SCORE: " + score, 190, canvas.height - 20);
         
-        // Target the player
-        this.target = {
-            x: pacman.x,
-            y: pacman.y,
-        };
+        // Draw level right next to score
+        canvasContext.fillStyle = "#ff00e5";
+        canvasContext.shadowColor = "#ff00e5";
+        canvasContext.fillText("LEVEL: " + level, 350, canvas.height - 20);
+        canvasContext.shadowBlur = 0;
+    }
 
-        // Use random target if ghost is too close to pacman based on range
-        if (
-            Math.abs(pacman.x - this.x) < this.range &&
-            Math.abs(pacman.y - this.y) < this.range
-        ) {
-            this.target = randomTargetsForGhosts[this.randomTargetIndex];
-        }
 
-        // Calculate direction based on target
-        let leftDistance = calculateDistance(
-            { x: this.x - this.speed, y: this.y },
-            this.target
-        );
-        let rightDistance = calculateDistance(
-            { x: this.x + this.speed, y: this.y },
-            this.target
-        );
-        let upDistance = calculateDistance(
-            { x: this.x, y: this.y - this.speed },
-            this.target
-        );
-        let bottomDistance = calculateDistance(
-            { x: this.x, y: this.y + this.speed },
-            this.target
-        );
+    // Draw walls with cyber aesthetic
+    function drawWalls() {
+        for (let i = 0; i < MAP_CONFIG.map.length; i++) {
+            for (let j = 0; j < MAP_CONFIG.map[0].length; j++) {
+                if (MAP_CONFIG.map[i][j] === 1) {
+                    // Wall color varies by level
+                    const levelColor = level <= 5 ? 
+                        `hsl(${240 + (level-1) * 30}, 70%, 50%)` : 
+                        wallColor;
+                    
+                    // Outer wall with glow
+                    createNeonRect(
+                        j * GAME_SETTINGS.oneBlockSize,
+                        i * GAME_SETTINGS.oneBlockSize,
+                        GAME_SETTINGS.oneBlockSize,
+                        GAME_SETTINGS.oneBlockSize,
+                        levelColor,
+                        levelColor
+                    );
 
-        // Choose the direction with shortest distance
-        let distances = [
-            { direction: DIRECTION_LEFT, distance: leftDistance },
-            { direction: DIRECTION_RIGHT, distance: rightDistance },
-            { direction: DIRECTION_UP, distance: upDistance },
-            { direction: DIRECTION_BOTTOM, distance: bottomDistance },
-        ];
-        
-        // Sort by distance
-        distances.sort((a, b) => a.distance - b.distance);
+                    // Inner wall parts (cyberpunk circuit pattern)
+                    if (j > 0 && MAP_CONFIG.map[i][j - 1] === 1) {
+                    createRect(
+                            j * GAME_SETTINGS.oneBlockSize,
+                            i * GAME_SETTINGS.oneBlockSize + wallOffset,
+                            GAME_SETTINGS.wallSpaceWidth + wallOffset,
+                            GAME_SETTINGS.wallSpaceWidth,
+                        wallInnerColor
+                    );
+                }
 
-        // Test each direction starting with the closest
-        for (let i = 0; i < distances.length; i++) {
-            if (
-                !this.checkCollision(this.x, this.y, distances[i].direction) &&
-                distances[i].direction != getOppositeDirection(this.direction)
-            ) {
-                this.direction = distances[i].direction;
-                break;
-            }
-        }
-        
-        // If we can't move in the chosen direction, continue in same direction if possible
-        if (this.checkCollision(this.x, this.y, this.direction)) {
-            this.direction = tempDirection;
-            
-            // If still blocked, try any valid direction
-            if (this.checkCollision(this.x, this.y, this.direction)) {
-                for (let i = 0; i < distances.length; i++) {
-                    if (!this.checkCollision(this.x, this.y, distances[i].direction)) {
-                        this.direction = distances[i].direction;
-                        break;
+                    if (j < MAP_CONFIG.map[0].length - 1 && MAP_CONFIG.map[i][j + 1] === 1) {
+                    createRect(
+                            j * GAME_SETTINGS.oneBlockSize + wallOffset,
+                            i * GAME_SETTINGS.oneBlockSize + wallOffset,
+                            GAME_SETTINGS.wallSpaceWidth + wallOffset,
+                            GAME_SETTINGS.wallSpaceWidth,
+                        wallInnerColor
+                    );
+                }
+
+                    if (i < MAP_CONFIG.map.length - 1 && MAP_CONFIG.map[i + 1][j] === 1) {
+                    createRect(
+                            j * GAME_SETTINGS.oneBlockSize + wallOffset,
+                            i * GAME_SETTINGS.oneBlockSize + wallOffset,
+                            GAME_SETTINGS.wallSpaceWidth,
+                            GAME_SETTINGS.wallSpaceWidth + wallOffset,
+                        wallInnerColor
+                    );
+                }
+
+                    if (i > 0 && MAP_CONFIG.map[i - 1][j] === 1) {
+                    createRect(
+                            j * GAME_SETTINGS.oneBlockSize + wallOffset,
+                            i * GAME_SETTINGS.oneBlockSize,
+                            GAME_SETTINGS.wallSpaceWidth,
+                            GAME_SETTINGS.wallSpaceWidth + wallOffset,
+                        wallInnerColor
+                    );
                     }
                 }
             }
         }
     }
 
-    getBlockX() {
-        return parseInt((this.x - xOffset) / oneBlockSize);
-    }
-
-    getBlockY() {
-        return parseInt((this.y - yOffset) / oneBlockSize);
-    }
-
-    getNextBlockX() {
-        if (this.direction == DIRECTION_LEFT) {
-            return this.getBlockX() - 1;
-        } else if (this.direction == DIRECTION_RIGHT) {
-            return this.getBlockX() + 1;
+    // Update ghosts
+    function updateGhosts() {
+        for (let i = 0; i < ghosts.length; i++) {
+            ghosts[i].moveProcess();
         }
-        return this.getBlockX();
     }
 
-    getNextBlockY() {
-        if (this.direction == DIRECTION_UP) {
-            return this.getBlockY() - 1;
-        } else if (this.direction == DIRECTION_BOTTOM) {
-            return this.getBlockY() + 1;
+    // Draw ghosts
+    function drawGhosts() {
+        for (let i = 0; i < ghosts.length; i++) {
+            ghosts[i].draw();
         }
-        return this.getBlockY();
     }
 
-    isInRangeOfBlock(x, y) {
-        let blockX = parseInt((x - xOffset) / oneBlockSize);
-        let blockY = parseInt((y - yOffset) / oneBlockSize);
-        return (
-            x - xOffset - blockX * oneBlockSize < oneBlockSize / 3 &&
-            y - yOffset - blockY * oneBlockSize < oneBlockSize / 3
-        );
-    }
-
-    checkCollision(x, y, direction) {
-        let blockX = parseInt((x - xOffset) / oneBlockSize);
-        let blockY = parseInt((y - yOffset) / oneBlockSize);
+    // Handle ghost collision
+    function onGhostCollision() {
+        GAME_SETTINGS.lives--;
+        playSound("death");
         
-        if (direction == DIRECTION_RIGHT) {
-            blockX += 1;
-        } else if (direction == DIRECTION_BOTTOM) {
-            blockY += 1;
-        } else if (direction == DIRECTION_LEFT) {
-            blockX -= 1;
-        } else if (direction == DIRECTION_UP) {
-            blockY -= 1;
+        if (GAME_SETTINGS.lives === 0) {
+            gameState = "gameover";
+        } else {
+            restartPacmanAndGhosts();
+        }
+    }
+
+    // Restart Pacman and Ghosts
+    function restartPacmanAndGhosts() {
+        createNewPacman();
+        createGhosts();
+    }
+
+    // Level transition effect
+    function showLevelTransition() {
+        levelTransition = true;
+        transitionTimer = 0;
+        playSound("levelup");
+        
+        console.log("Showing level transition to level:", level);
+        
+        // Need to clear current interval before setting a new one
+        clearInterval(gameInterval);
+        
+        // Set a new interval for the transition effect
+        gameInterval = setInterval(() => {
+            transitionTimer++;
+            
+            // Clear canvas for transition effect
+            canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Flash background with random neon colors
+            const flashColor = GAME_SETTINGS.flashColors[Math.floor(transitionTimer/3) % GAME_SETTINGS.flashColors.length];
+            createRect(0, 0, canvas.width, canvas.height, "#000");
+            
+            if (transitionTimer % 6 < 3) {
+                canvasContext.shadowBlur = 20;
+                canvasContext.shadowColor = flashColor;
+                canvasContext.fillStyle = flashColor;
+                canvasContext.font = "30px Emulogic";
+                canvasContext.textAlign = "center";
+                canvasContext.fillText("LEVEL " + level, canvas.width / 2, canvas.height / 2);
+                canvasContext.shadowBlur = 0;
+                canvasContext.textAlign = "left";
+            }
+            
+            // Transition complete
+            if (transitionTimer >= 30) {
+                levelTransition = false;
+                clearInterval(gameInterval);
+                startGame();
+            }
+        }, 1000 / 15);
+    }
+
+    // Draw game over screen
+    function drawGameOver() {
+        createRect(0, 0, canvas.width, canvas.height, "rgba(0, 0, 0, 0.8)");
+        
+        canvasContext.shadowBlur = 15;
+        canvasContext.shadowColor = "#ff0055";
+        canvasContext.fillStyle = "#ff0055";
+        canvasContext.font = "30px Emulogic";
+        canvasContext.textAlign = "center";
+        canvasContext.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 50);
+        
+        canvasContext.shadowColor = "#00e5ff";
+        canvasContext.fillStyle = "#00e5ff";
+        canvasContext.font = "20px Emulogic";
+        canvasContext.fillText("FINAL SCORE: " + score, canvas.width / 2, canvas.height / 2);
+        
+        canvasContext.font = "16px Emulogic";
+        canvasContext.fillText("PRESS SPACE TO RETRY", canvas.width / 2, canvas.height / 2 + 50);
+        canvasContext.shadowBlur = 0;
+        canvasContext.textAlign = "left";
+    }
+
+    // Update game state
+    function update() {
+        if (paused || levelTransition) return;
+        
+        // Ensure we have valid game objects
+        if (!pacman || !ghosts || ghosts.length === 0) {
+            console.error("Game objects not properly initialized!");
+            return;
         }
         
-        return blockX < 0 || blockX >= map[0].length || blockY < 0 || blockY >= map.length || map[blockY][blockX] == 1;
+        pacman.moveProcess();
+        pacman.eat();
+        updateGhosts();
+        
+        // Check if pacman ate all dots
+        if (dotsEaten >= totalDotsCount) {
+            level = Math.min(level + 1, GAME_SETTINGS.maxLevel);
+            GAME_SETTINGS.currentLevel = level;
+            showLevelTransition();
+            // Reset the map for next level
+            MAP_CONFIG.resetMap();
+            dotsEaten = 0;
+            totalDotsCount = countTotalDots();
+            return;
+        }
+        
+        // Check for ghost collision
+        if (pacman.checkGhostCollision(ghosts)) {
+            onGhostCollision();
+        }
     }
+
+    // Draw game state
+    function draw() {
+        // Clear canvas
+        canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw cyberpunk background - completely black with no border
+        createRect(0, 0, canvas.width, canvas.height, "#000");
+        
+        // Add subtle grid effect to background
+        canvasContext.strokeStyle = "rgba(0, 229, 255, 0.1)";
+        canvasContext.lineWidth = 0.5;
+        
+        for (let i = 0; i < canvas.width; i += 20) {
+            canvasContext.beginPath();
+            canvasContext.moveTo(i, 0);
+            canvasContext.lineTo(i, canvas.height);
+            canvasContext.stroke();
+        }
+        
+        for (let i = 0; i < canvas.height; i += 20) {
+            canvasContext.beginPath();
+            canvasContext.moveTo(0, i);
+            canvasContext.lineTo(canvas.width, i);
+            canvasContext.stroke();
+        }
+        
+        // Draw game elements
+        if (gameState === "playing") {
+            drawWalls();
+            drawFoods();
+            drawGhosts();
+            pacman.draw();
+        } else if (gameState === "gameover") {
+            drawGameOver();
+        }
+        
+        // Always draw UI elements
+        drawScore();
+        drawRemainingLives();
+        // drawLevel() is removed since we now draw level next to score
+        
+        // Scanline effect
+        drawScanlines();
+    }
+
+    // Draw scanlines effect
+    function drawScanlines() {
+        canvasContext.fillStyle = "rgba(0, 0, 0, 0.15)";
+        for (let i = 0; i < canvas.height; i += 4) {
+            canvasContext.fillRect(0, i, canvas.width, 2);
+        }
+        
+        // Add random glitch effect occasionally
+        if (Math.random() < 0.01) {
+            const glitchHeight = Math.floor(Math.random() * 10) + 5;
+            const glitchY = Math.floor(Math.random() * canvas.height);
+            canvasContext.fillStyle = "rgba(0, 255, 255, 0.1)";
+            canvasContext.fillRect(0, glitchY, canvas.width, glitchHeight);
+        }
+    }
+
+    // Main game loop
+    function gameLoop() {
+        update();
+        draw();
+    }
+
+    // Initialize and start the game
+    function init() {
+        console.log("Initializing CyberPacman game");
+        
+        try {
+            // Check that critical elements are available
+            if (!canvas || !canvasContext) {
+                console.error("Canvas or context not available!");
+                throw new Error("Canvas elements not found");
+            }
+            
+            if (!pacmanFrames || !ghostFrames) {
+                console.error("Game sprites not loaded!");
+                throw new Error("Game sprites not found");
+            }
+            
+            if (typeof MAP_CONFIG === 'undefined' || !MAP_CONFIG.resetMap) {
+                console.error("MAP_CONFIG not available!");
+                throw new Error("MAP_CONFIG not available - game cannot start");
+            }
+            
+            // Reset game state
+            score = 0;
+            level = 1;
+            GAME_SETTINGS.currentLevel = 1;
+            GAME_SETTINGS.lives = 3;
+            gameState = "playing";
+            paused = false;
+            
+            // Setup map and count dots
+            MAP_CONFIG.resetMap();
+            resizeGame();
+            
+            // Double-check map was properly loaded
+            if (!MAP_CONFIG.map || MAP_CONFIG.map.length === 0 || MAP_CONFIG.map[0].length === 0) {
+                console.error("Map failed to load correctly");
+                throw new Error("Game map failed to load");
+            }
+            
+            totalDotsCount = countTotalDots();
+            dotsEaten = 0;
+            
+            // Create game objects
+            try {
+                createNewPacman();
+                
+                if (!pacman) {
+                    throw new Error("Failed to create Pacman");
+                }
+                
+                createGhosts();
+                
+                if (!ghosts || ghosts.length === 0) {
+                    throw new Error("Failed to create Ghosts");
+                }
+            } catch (objError) {
+                console.error("Error creating game objects:", objError);
+                throw new Error("Failed to create game objects: " + objError.message);
+            }
+            
+            // Add keyboard controls
+            setupKeyboardControls();
+            
+            // Clean up any existing interval
+            if (gameInterval) {
+                clearInterval(gameInterval);
+                gameInterval = null;
+            }
+            
+            // Start the game!
+            startGame();
+            
+            return true;
+        } catch (err) {
+            console.error("Game initialization error:", err);
+            return false;
+        }
+    }
+    
+    // Start the game loop
+    function startGame() {
+        console.log("Starting game loop");
+        if (gameInterval) {
+            clearInterval(gameInterval);
+        }
+        gameInterval = setInterval(gameLoop, 1000 / GAME_SETTINGS.fps);
+    }
+
+    // Setup keyboard controls
+    function setupKeyboardControls() {
+        window.removeEventListener("keydown", keyboardHandler);
+        window.addEventListener("keydown", keyboardHandler);
+        console.log("Keyboard controls setup");
+    }
+
+    // Keyboard event handler
+    function keyboardHandler(event) {
+    let k = event.keyCode;
+        
+        // If game over, space restarts the game
+        if (gameState === "gameover" && (k === 32 || k === 13)) {
+            init();
+            return;
+        }
+        
+        // P key to toggle pause
+        if (k === 80) {
+            paused = !paused;
+            console.log("Game " + (paused ? "paused" : "resumed"));
+            return;
+        }
+        
+        // M key to toggle sound
+        if (k === 77) {
+            sound = !sound;
+            console.log("Sound " + (sound ? "enabled" : "muted"));
+            return;
+        }
+        
+        if (paused || gameState !== "playing") return;
+        
+        // Movement controls
+    setTimeout(() => {
+            if (k === 37 || k === 65) { // left arrow or a
+            pacman.nextDirection = DIRECTION_LEFT;
+            } else if (k === 38 || k === 87) { // up arrow or w
+            pacman.nextDirection = DIRECTION_UP;
+            } else if (k === 39 || k === 68) { // right arrow or d
+            pacman.nextDirection = DIRECTION_RIGHT;
+            } else if (k === 40 || k === 83) { // bottom arrow or s
+            pacman.nextDirection = DIRECTION_BOTTOM;
+        }
+    }, 1);
+    }
+
+    // Public methods
+    return {
+        init: init,
+        togglePause: function() {
+            paused = !paused;
+            if (gameInterval) {
+                clearInterval(gameInterval);
+                gameInterval = null;
+            }
+        },
+        toggleSound: function() {
+            sound = !sound;
+        },
+        // Expose eat method to be called from Pacman class
+        registerEat: function(type) {
+            if (type === "dot") {
+                dotsEaten++;
+                score += 10;
+                playSound("eat");
+            } else if (type === "powerup") {
+                score += 50;
+                playSound("powerup");
+            }
+        },
+        getSound: function() {
+            return sound;
+        },
+        getCurrentMap: function() {
+            return MAP_CONFIG.map;
+        },
+        getGameSettings: function() {
+            return GAME_SETTINGS;
+        },
+        getOneBlockSize: function() {
+            return GAME_SETTINGS.oneBlockSize;
+        }
+    };
+})();
+
+// Initialize the game when requested externally
+function startCyberPacman() {
+    console.log("startCyberPacman function called");
+    return CYBERPACMAN.init();
 }
 
-// Helper functions
-let calculateDistance = (point1, point2) => {
-    return Math.sqrt(
-        Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2)
-    );
-};
 
-let getOppositeDirection = (direction) => {
-    if (direction == DIRECTION_LEFT) {
-        return DIRECTION_RIGHT;
-    } else if (direction == DIRECTION_RIGHT) {
-        return DIRECTION_LEFT;
-    } else if (direction == DIRECTION_UP) {
-        return DIRECTION_BOTTOM;
-    } else if (direction == DIRECTION_BOTTOM) {
-        return DIRECTION_UP;
-    }
-    return -1; // Invalid direction
-}; 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
